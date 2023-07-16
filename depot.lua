@@ -4,10 +4,10 @@ local utils = require('utils')
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
-local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
+local movePath = 'TSC/tmp/movetable.lua'
 
 local settings = {}
-local items = {}
+local moveTable = {}
 
 local function loadfiles()
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
@@ -17,12 +17,12 @@ local function loadfiles()
         settings = loadSettings()
     end
 
-    local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
-    if itemerror then
-        print('Error loading allitems_'..me..'.lua')
+    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
+    if moveerror then
+        print('Error loading movetable.lua')
         mq.exit()
-    elseif allitems then
-        items = allitems()
+    elseif movefile then
+        moveTable = movefile()
     end
 end
 loadfiles()
@@ -30,53 +30,16 @@ loadfiles()
 print('\at[TsC]\ao Looking for items to move to depot...')
 mq.delay(1000)
 
-
-local shouldDepot
-local shouldMove
-
-local depotList = {}
-local bankToDepotList = {}
-
---Create list of items in inventory and depot, but not in bank
---Create list of items in bank and depot, but not in inventory
-local function toMove()
-    for item,_ in pairs(items) do
-        local bank = false
-        local inventory = false
-        local depot = false
-        for _,v in pairs(items[item]['locations']) do
-            if string.match(v, "Bank") then
-                bank = true
-            end
-            if string.match(v, "General") then
-                inventory = true
-            end
-            if string.match(v, "Personal") then
-                depot = true
-            end
-        end
-        if inventory == true and bank == false and depot == true then
-            table.insert(depotList, item)
-            shouldDepot = true
-        elseif bank == true and depot == true then
-            table.insert(bankToDepotList, item)
-            shouldMove = true
-        end
-    end
-end
-toMove()
+local depotList = moveTable[me]['todepot']
+local bankToDepotList = moveTable[me]['tomove']
 
 local count = 0
 local move = 0
 
 if mq.TLO.TradeskillDepot.Enabled() then
-    if shouldDepot == true then
-        count = count + utils.depot(depotList, false) --False tells depot function not to worry about depot capacity since it's just adding to existing items
-    end
+    count = count + utils.depot(depotList, false) --False tells depot function not to worry about depot capacity since it's just adding to existing items
 
-    if shouldMove == true then
-        move = move + utils.bankToDepot(bankToDepotList)
-    end
+    move = move + utils.bankToDepot(bankToDepotList)
 else
     print('\at[TsC]\ay Personal depot is not enabled on this toon.')
 end

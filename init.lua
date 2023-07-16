@@ -1011,6 +1011,7 @@ local function getPeers()
         end
         getToonPeers()
         getMulePeers()
+        setObservers()
     end
 end
 
@@ -1336,7 +1337,7 @@ local function moveWindow()
             ImGui.TextWrapped('These are duplicate items that are on your toon in multiple places (e.g., in your inventory AND in your bank). If you see anything you don\'t want to consolidate, you can click skip.')
 
             ImGui.PushStyleColor(ImGuiCol.Button,0,1,0,.5)
-                if ImGui.Button('Continue') then continue = true openMove = false end
+                if ImGui.Button('Continue') then skipMoving = false continue = true openMove = false end
             ImGui.PopStyleColor()
             ImGui.SameLine()
 

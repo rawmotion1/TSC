@@ -5,12 +5,12 @@ local utils = require('utils')
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
 local toonPath = 'TSC/toons.lua'
-local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
+local movePath = 'TSC/tmp/movetable.lua'
 local artisanPath = 'TSC/artisan.lua'
 
 local settings = {}
 local toons = {}
-local items = {}
+local moveTable = {}
 local artList = {}
 
 local function loadfiles()
@@ -28,12 +28,12 @@ local function loadfiles()
         toons = loadToons()
     end
 
-    local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
-    if itemerror then
-        print('Error loading allitems_'..me..'.lua')
+    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
+    if moveerror then
+        print('Error loading movetable.lua')
         mq.exit()
-    elseif allitems then
-        items = allitems()
+    elseif movefile then
+        moveTable = movefile()
     end
 
     local loadArt, artError = loadfile(mq.configDir..'/'..artisanPath)
@@ -48,33 +48,7 @@ loadfiles()
 print('\at[TsC]\ao Attempting to store leftover items...')
 mq.delay(1000)
 
-local shouldStore
-local storeList = {}
-
---Create list of itmes in inventory but not in bank or depot
-local function toStore()
-    for item,_ in pairs(items) do
-        local bank = false
-        local inventory = false
-        local depot = false
-        for _,v in pairs(items[item]['locations']) do
-            if string.match(v, "Bank") then
-                bank = true
-            end
-            if string.match(v, "General") then
-                inventory = true
-            end
-            if string.match(v, "Personal") then
-                depot = true
-            end
-        end
-        if inventory == true and bank == false and depot == false then
-            table.insert(storeList, item)
-            shouldStore = true
-        end
-    end
-end
-toStore()
+local storeList = moveTable[me]['rest']
 
 local bankCount
 local depotCount
@@ -87,8 +61,6 @@ for _,toon in pairs(toons) do
         break
     end
 end
-
-
 
 local firstRun = true
 local muleList = {}
@@ -116,7 +88,7 @@ local function giveToMules(previousMule)
 
     local mule = nil
     for _,toon in pairs(settings.mules) do
-        if toon ~= me and toon ~= previousMule and mq.TLO.NearestSpawn('='..toon)() then mule = toon break end
+        if toon.name ~= me and toon.name ~= previousMule and mq.TLO.NearestSpawn('='..toon.name)() then mule = toon.name break end
     end
 
     if mule then
@@ -134,40 +106,36 @@ local function giveToMules(previousMule)
     end
 end
 
-if shouldStore == true then
-
-    if rest == 'Depot > Bank > Mules' then
-        if mq.TLO.TradeskillDepot.Enabled() then
-            depotCount, storeList = utils.depot(storeList)
-        else
-            print('\at[TsC]\ay Personal depot is not enabled on this toon.')
-        end
-        bankCount, storeList = utils.bank(storeList)
-        giveToMules()
-    elseif rest == 'Depot > Bank' then
-        if mq.TLO.TradeskillDepot.Enabled() then
-            depotCount, storeList = utils.depot(storeList)
-        else
-            print('\at[TsC]\ay Personal depot is not enabled on this toon.')
-        end
-        bankCount, storeList = utils.bank(storeList)
-
-    elseif rest == 'Depot > Mules' then
-        if mq.TLO.TradeskillDepot.Enabled() then
-            depotCount, storeList = utils.depot(storeList)
-        else
-            print('\at[TsC]\ay Personal depot is not enabled on this toon.')
-        end
-        giveToMules()
-    elseif rest == 'Bank > Mules' then
-        bankCount, storeList = utils.bank(storeList)
-        giveToMules()
-    elseif rest == 'Bank' then
-        bankCount, storeList = utils.bank(storeList)
-    elseif rest == 'Mules' then
-        giveToMules()
+if rest == 'Depot > Bank > Mules' then
+    if mq.TLO.TradeskillDepot.Enabled() then
+        depotCount, storeList = utils.depot(storeList)
+    else
+        print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
+    bankCount, storeList = utils.bank(storeList)
+    giveToMules()
+elseif rest == 'Depot > Bank' then
+    if mq.TLO.TradeskillDepot.Enabled() then
+        depotCount, storeList = utils.depot(storeList)
+    else
+        print('\at[TsC]\ay Personal depot is not enabled on this toon.')
+    end
+    bankCount, storeList = utils.bank(storeList)
 
+elseif rest == 'Depot > Mules' then
+    if mq.TLO.TradeskillDepot.Enabled() then
+        depotCount, storeList = utils.depot(storeList)
+    else
+        print('\at[TsC]\ay Personal depot is not enabled on this toon.')
+    end
+    giveToMules()
+elseif rest == 'Bank > Mules' then
+    bankCount, storeList = utils.bank(storeList)
+    giveToMules()
+elseif rest == 'Bank' then
+    bankCount, storeList = utils.bank(storeList)
+elseif rest == 'Mules' then
+    giveToMules()
 end
 
 if bankCount == nil then bankCount = 0 end

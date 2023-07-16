@@ -4,10 +4,10 @@ local utils = require('utils')
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
-local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
+local movePath = 'TSC/tmp/movetable.lua'
 
 local settings = {}
-local items = {}
+local moveTable = {}
 
 local function loadfiles()
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
@@ -17,12 +17,12 @@ local function loadfiles()
         settings = loadSettings()
     end
 
-    local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
-    if itemerror then
-        print('Error loading allitems_'..me..'.lua')
+    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
+    if moveerror then
+        print('Error loading movetable.lua')
         mq.exit()
-    elseif allitems then
-        items = allitems()
+    elseif movefile then
+        moveTable = movefile()
     end
 end
 loadfiles()
@@ -30,38 +30,11 @@ loadfiles()
 print('\at[TsC]\ao Looking for items to move to bank...')
 mq.delay(1000)
 
-local shouldBank
-local bankList = {}
-
---Create list from items in inventory and bank, but that are not in depot
-local function toMove()
-    for item,_ in pairs(items) do
-        local bank = false
-        local inventory = false
-        local depot = false
-        for _,v in pairs(items[item]['locations']) do
-            if string.match(v, "Bank") then
-                bank = true
-            end
-            if string.match(v, "General") then
-                inventory = true
-            end
-            if string.match(v, "Personal") then
-                depot = true
-            end
-        end
-        if inventory == true and bank == true and depot == false then
-            table.insert(bankList, item)
-            shouldBank = true
-        end
-    end
-end
-toMove()
+local bankList = moveTable[me]['tobank']
 
 local count = 0
-if shouldBank == true then
-    count = count + utils.bank(bankList)
-end
+
+count = count + utils.bank(bankList)
 
 if count > 0 then
     mq.cmdf('/dt %s \awDone banking. Banked \ay%s \awunique items.', settings.driver, count)
