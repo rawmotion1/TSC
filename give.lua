@@ -86,7 +86,7 @@ local function give()
 end
 give()
 
-mq.cmdf('/dgt \ar%s \awdone giving. Gave away \ay%s \awunique items.', me, tradeCount)
+mq.cmdf('/dt %s \awDone giving. Gave away \ay%s \awunique items.', settings.driver, tradeCount)
 
 --Tell init that this script is done
 if settings.driver == me then

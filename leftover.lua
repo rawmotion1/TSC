@@ -136,7 +136,7 @@ end
 
 if shouldStore == true then
 
-    if rest == 'DBM' then
+    if rest == 'Depot > Bank > Mules' then
         if mq.TLO.TradeskillDepot.Enabled() then
             depotCount, storeList = utils.depot(storeList)
         else
@@ -144,7 +144,7 @@ if shouldStore == true then
         end
         bankCount, storeList = utils.bank(storeList)
         giveToMules()
-    elseif rest == 'DB' then
+    elseif rest == 'Depot > Bank' then
         if mq.TLO.TradeskillDepot.Enabled() then
             depotCount, storeList = utils.depot(storeList)
         else
@@ -152,19 +152,19 @@ if shouldStore == true then
         end
         bankCount, storeList = utils.bank(storeList)
 
-    elseif rest == 'DM' then
+    elseif rest == 'Depot > Mules' then
         if mq.TLO.TradeskillDepot.Enabled() then
             depotCount, storeList = utils.depot(storeList)
         else
             print('\at[TsC]\ay Personal depot is not enabled on this toon.')
         end
         giveToMules()
-    elseif rest == 'BM' then
+    elseif rest == 'Bank > Mules' then
         bankCount, storeList = utils.bank(storeList)
         giveToMules()
-    elseif rest == 'B' then
+    elseif rest == 'Bank' then
         bankCount, storeList = utils.bank(storeList)
-    elseif rest == 'M' then
+    elseif rest == 'Mules' then
         giveToMules()
     end
 
@@ -173,7 +173,9 @@ end
 if bankCount == nil then bankCount = 0 end
 if depotCount == nil then depotCount = 0 end
 
-mq.cmdf('/dgt \ar%s \awdone with leftovers. Dumped \ay%s \awremaining items into the bank/depot and \ay%s \awonto mules.', me, bankCount+depotCount, muleCount)
+if bankCount > 0 or depotCount > 0 then
+    mq.cmdf('/dt %s \awDone with leftovers. Dumped \ay%s \awremaining items into the bank/depot and \ay%s \awonto mules.', settings.driver, bankCount+depotCount, muleCount)
+end
 
 --Tell init that this script is done
 if settings.driver == me then

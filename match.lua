@@ -125,7 +125,7 @@ local function defineMatches()
     else
         print('\at[TsC]\ao Artisan: \aynone')
     end
-    print('\at[TsC]\ao Comparing results across toons. This can take a while..')
+    print('\at[TsC]\ao Comparing results across toons...')
     mq.delay(1000)
 
     for item,player in pairs(qTable) do --Start iterating through items

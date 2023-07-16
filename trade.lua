@@ -52,7 +52,6 @@ for _,toon in pairs(toons) do
         end
     end
 end
-mq.pickle('TSC/tmp/tradeList.lua', tradeList)
 
 --Send one toon's tradelist to function at a time
 local count = 0
@@ -60,7 +59,9 @@ for receiver,_ in pairs(tradeList) do
     count = count + utils.tradeNew(receiver, tradeList[receiver], true)
 end
 
-mq.cmdf('/dgt \ar%s \awdone trading. Gave away \ay%s \awunique items.', me, count)
+if count > 0 then
+    mq.cmdf('/dgt %s \awDone trading. Gave away \ay%s \awunique items.', settings.driver, count)
+end
 
 --Tell init that this script is done
 if settings.driver == me then

@@ -63,7 +63,9 @@ if shouldBank == true then
     count = count + utils.bank(bankList)
 end
 
-mq.cmdf('/dgt \ar%s \awdone banking. Banked \ay%s \awunique items.', me, count)
+if count > 0 then
+    mq.cmdf('/dt %s \awDone banking. Banked \ay%s \awunique items.', settings.driver, count)
+end
 
 --Tell init that this script is done
 if settings.driver == me then

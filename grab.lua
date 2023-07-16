@@ -76,7 +76,9 @@ if shouldGrab == true then
     count = count + utils.grab(grabList, 1, what)
 end
 
-mq.cmdf('/dgt \ar%s \awdone grabbing from bank. Grabbed \ay%s \awunique items.', me, count)
+if count > 0 then
+    mq.cmdf('/dgt %s \awDone grabbing from bank. Grabbed \ay%s \awunique items.', settings.driver, count)
+end
 
 --Tell init that this script is done
 if settings.driver == me then

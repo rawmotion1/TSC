@@ -129,7 +129,7 @@ end
 --Save stats file for this toon
 mq.pickle(statPath, stats)
 
-mq.cmdf('/dgt \ar%s \awdone scanning. Found \ay%s \awunique items using up \ay%s \awslots.', me, countItems, countSlots)
+mq.cmdf('/dt %s \awDone scanning. Found \ay%s \awunique items using up \ay%s \awslots.', settings.driver, countItems, countSlots)
 
 --Tell init that this script is done
 if settings.driver == me then

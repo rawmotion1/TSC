@@ -81,7 +81,9 @@ else
     print('\at[TsC]\ay Personal depot is not enabled on this toon.')
 end
 
-mq.cmdf('/dgt \ar%s \awdone with depot. Placed \ay%s \awunique items from inventory and \ay%s \awfrom bank into the depot.', me, count, move)
+if count > 0 or move > 0 then
+    mq.cmdf('/dt %s \awDone with depot. Placed \ay%s \awunique items from inventory and \ay%s \awfrom bank into the depot.', settings.driver, count, move)
+end
 
 --Tell init that this script is done
 if settings.driver == me then
