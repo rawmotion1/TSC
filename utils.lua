@@ -314,9 +314,9 @@ function utils.tradeNew(receiver, list, override)
 
                 if countTo8 == 8 then --if tradewindow is full, give
                     repeat
-                        mq.cmd('/yes')
+                        mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
                         mq.delay(100)
-                        mq.cmdf('/dex %s /yes', receiver)
+                        mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
                         mq.delay(1000)
                     until not mq.TLO.Window('TradeWnd').Open()
                     countTo8 = 0
@@ -326,9 +326,9 @@ function utils.tradeNew(receiver, list, override)
                 print('\at[TsC]\ao Uh oh, it appears \ar'..receiver..' \ay is low on inventory space!')
                 full = true
                 repeat
-                    mq.cmd('/yes')
+                    mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
                     mq.delay(100)
-                    mq.cmdf('/dex %s /yes', receiver)
+                    mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
                     mq.delay(1000)
                 until not mq.TLO.Window('TradeWnd').Open()
                 utils.cleanup()
@@ -337,9 +337,9 @@ function utils.tradeNew(receiver, list, override)
         end
     end
     repeat
-        mq.cmd('/yes')
+        mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
         mq.delay(100)
-        mq.cmdf('/dex %s /yes', receiver)
+        mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
         mq.delay(1000)
     until not mq.TLO.Window('TradeWnd').Open()
     mq.cmdf('/dobserve %s -drop', receiver)
@@ -389,7 +389,7 @@ function utils.bank(bankList)
     return count, bankList
 end
 
-
+utils.resume = true
 function utils.depot(depotList, checkSize)
     utils.cleanup()
     utils.banker()
@@ -411,6 +411,7 @@ function utils.depot(depotList, checkSize)
 
                     mq.cmd('/foreground self.Name')
 
+                    local attempts = 0
                     while mq.TLO.Cursor() do
                         mq.cmdf('/mouseto %s %s', mouseLocX, mouseLocY)
                         mq.delay(100)
@@ -419,6 +420,21 @@ function utils.depot(depotList, checkSize)
                             mq.cmd('/no') --Avoid accidentally dropping items on the ground
                         end
                         mq.delay(300)
+
+                        attempts = attempts + 1
+                        if attempts > 9 then
+                            utils.resume = false
+                            while utils.resume == false do
+                                mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \aycan\'t depost. Be sure no Lua windows are obstructing their depot window.', mq.TLO.Me.Name())
+                                mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Type \ag/tsresume\ay from the stuck toon\'s EQ window to try again.')
+                                local function stop()
+                                    return utils.resume
+                                end
+                                mq.delay(10000, stop)
+                                if utils.resume == true then attempts = 0 end
+                            end
+                        end
+
                     end
                 until mq.TLO.FindItemCount('='..item)() == 0
             else

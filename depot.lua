@@ -36,6 +36,11 @@ local bankToDepotList = moveTable[me]['tomove']
 local count = 0
 local move = 0
 
+local function binds()
+    utils.resume = true
+end
+mq.bind('/tsresume', binds)
+
 if mq.TLO.TradeskillDepot.Enabled() then
     count = count + utils.depot(depotList, false) --False tells depot function not to worry about depot capacity since it's just adding to existing items
 
