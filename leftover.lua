@@ -62,6 +62,21 @@ for _,toon in pairs(toons) do
     end
 end
 
+local function binds()
+    utils.resume = true
+end
+mq.bind('/tsresume', binds)
+
+local function listSize(list)
+    local n = 0
+    for _,item in pairs(list) do
+        if not string.match(item, 'be skipped') then
+            n = n + 1
+        end
+    end
+    return n
+end
+
 local firstRun = true
 local muleList = {}
 local thisTradeCount
@@ -108,34 +123,55 @@ end
 
 if rest == 'Depot > Bank > Mules' then
     if mq.TLO.TradeskillDepot.Enabled() then
-        depotCount, storeList = utils.depot(storeList)
+        if listSize(storeList) > 0 then
+            depotCount, storeList = utils.depot(storeList)
+        end
     else
         print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
-    bankCount, storeList = utils.bank(storeList)
-    giveToMules()
+    if listSize(storeList) > 0 then
+        bankCount, storeList = utils.bank(storeList)
+    end
+    if listSize(storeList) > 0 then
+        giveToMules()
+    end
 elseif rest == 'Depot > Bank' then
     if mq.TLO.TradeskillDepot.Enabled() then
-        depotCount, storeList = utils.depot(storeList)
+        if listSize(storeList) > 0 then
+            depotCount, storeList = utils.depot(storeList)
+        end
     else
         print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
-    bankCount, storeList = utils.bank(storeList)
-
+    if listSize(storeList) > 0 then
+        bankCount, storeList = utils.bank(storeList)
+    end
 elseif rest == 'Depot > Mules' then
     if mq.TLO.TradeskillDepot.Enabled() then
-        depotCount, storeList = utils.depot(storeList)
+        if listSize(storeList) > 0 then
+            depotCount, storeList = utils.depot(storeList)
+        end
     else
         print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
-    giveToMules()
+    if listSize(storeList) > 0 then
+        giveToMules()
+    end
 elseif rest == 'Bank > Mules' then
-    bankCount, storeList = utils.bank(storeList)
-    giveToMules()
+    if listSize(storeList) > 0 then
+        bankCount, storeList = utils.bank(storeList)
+    end
+    if listSize(storeList) > 0 then
+        giveToMules()
+    end
 elseif rest == 'Bank' then
-    bankCount, storeList = utils.bank(storeList)
+    if listSize(storeList) > 0 then
+        bankCount, storeList = utils.bank(storeList)
+    end
 elseif rest == 'Mules' then
-    giveToMules()
+    if listSize(storeList) > 0 then
+        giveToMules()
+    end
 end
 
 if bankCount == nil then bankCount = 0 end

@@ -40,7 +40,7 @@ loadfiles()
 print('\at[TsC]\ao Looking for items to give away...')
 mq.delay(1000)
 
---Create tradelist in format thar utils.newTrade can understand
+--Create tradelist in format that utils.newTrade can understand
 local tradeList = {}
 for _,toon in pairs(toons) do
     for item,receiver in pairs(matches[me]) do

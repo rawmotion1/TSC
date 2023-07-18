@@ -2,10 +2,15 @@
 local mq = require('mq')
 local utils = require('utils')
 
-local args = {...} 
+local args = {...}
 local name = args[1] --receiver
-local scope = tonumber(args[2]) --4 for inventory, 1 for everything
+local scope = tonumber(args[2]) --4 for inventory, 1 for everywhere
 local what = tonumber(args[3]) -- 41 for mats, 19 for collectibles
+local bank = args[4]
+local depot = args[5]
+
+if bank == 'true' then bank = true end
+if depot == 'true' then depot = true end
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
@@ -40,7 +45,12 @@ if scope == 1 then --if all mode, create list of things to grab
     for item,_ in pairs(items) do
         local inBank = false
         for _,location in pairs(items[item]['locations']) do
-            if string.match(location,"Bank") or string.match(location,"Personal") then
+            
+            if bank == true and string.match(location,"Bank") then
+                inBank = true
+                print('here')
+            end
+            if depot == true and string.match(location,"Personal") then
                 inBank = true
             end
         end

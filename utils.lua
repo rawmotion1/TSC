@@ -360,10 +360,11 @@ function utils.bank(bankList)
     mq.event('fullbank', '#*#You have no room left in the bank#*#', bankFull)
 
     for index,item in pairs(bankList) do
-        print('\at[TsC]\ao Putting \ay'..item..' \aoin the bank.')
+        
         utils.autoinv()
 
         if mq.TLO.FindItemCount('='..item)() > 0 then
+            print('\at[TsC]\ao Putting \ay'..item..' \aoin the bank.')
             repeat
 
                 utils.pickup(item)
@@ -399,11 +400,11 @@ function utils.depot(depotList, checkSize)
     local mouseLocY = mq.TLO.Window('TradeskillDepotWnd').Y() + (mq.TLO.Window('TradeskillDepotWnd').Height() / 2)
 
     for index,item in pairs(depotList) do
-        print('\at[TsC]\ao Putting \ay'..item..' \aoin your depot.')
+        
         utils.autoinv()
 
         if mq.TLO.FindItemCount('='..item)() > 0 then
-
+            print('\at[TsC]\ao Putting \ay'..item..' \aoin your depot.')
             if checkSize == false or mq.TLO.TradeskillDepot.Count() < mq.TLO.TradeskillDepot.Capacity() then
                 repeat
 

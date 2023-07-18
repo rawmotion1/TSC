@@ -30,6 +30,16 @@ loadfiles()
 print('\at[TsC]\ao Looking for items to move to depot...')
 mq.delay(1000)
 
+local function listSize(list)
+    local n = 0
+    for _,item in pairs(list) do
+        if not string.match(item, 'be skipped') then
+            n = n + 1
+        end
+    end
+    return n
+end
+
 local depotList = moveTable[me]['todepot']
 local bankToDepotList = moveTable[me]['tomove']
 
@@ -42,9 +52,12 @@ end
 mq.bind('/tsresume', binds)
 
 if mq.TLO.TradeskillDepot.Enabled() then
-    count = count + utils.depot(depotList, false) --False tells depot function not to worry about depot capacity since it's just adding to existing items
-
-    move = move + utils.bankToDepot(bankToDepotList)
+    if listSize(depotList) > 0 then
+        count = count + utils.depot(depotList, false) --False tells depot function not to worry about depot capacity since it's just adding to existing items
+    end
+    if listSize(bankToDepotList) > 0 then
+        move = move + utils.bankToDepot(bankToDepotList)
+    end
 else
     print('\at[TsC]\ay Personal depot is not enabled on this toon.')
 end
