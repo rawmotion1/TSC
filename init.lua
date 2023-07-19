@@ -3,7 +3,7 @@
 local mq = require('mq')
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.1'
+local version = '1.0.2'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -882,28 +882,8 @@ end
 
 ---------------------
 --------Binds--------
-local function binds(a, b, c, d)
-    if a == 'match' then
-        match()
-    elseif a == 'rescan' then
-        scan(traders, 2)
-    elseif a == 'scan' then
-        scan(toons)
-    elseif a == 'grab' then
-        grab(traders)
-    elseif a == 'trade' then
-        trade(traders)
-    elseif a == 'bank' then
-        bank(toons)
-    elseif a == 'depot' then
-        depot(toons)
-    elseif a == 'stats' then
-        createStats()
-    elseif a == 'calc' then
-        calcStats(toons)
-    elseif a == 'rest' then
-        rest(toons)
-    elseif a == 'donescanning' then
+local function binds(a, b)
+    if a == 'donescanning' then
         stopWaitingScanning()
     elseif a == 'donematching' then
         stopWaitingMatching()
@@ -1242,10 +1222,6 @@ end
 --Alphabetically sort ignore/artisan list table
 local current_sort_specs = nil
 local function sortBName(a, b)
-    local length = 0
-        for k,v in pairs (ignore) do --remove
-            length = length + 1
-        end
     for n = 1, current_sort_specs.SpecsCount, 1 do
         local sort_spec = current_sort_specs:Specs(n)
         local delta = 0

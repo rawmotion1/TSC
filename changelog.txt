@@ -1,3 +1,7 @@
+v1.0.2 - 19.07.2023
+- Removed unecessary code in alphabatize function
+- Removed unecessary binds
+
 v1.0.1 - 19.07.2023
 - Removed option to give to self in give list
 - Give list now shows all dannet peers in zone instead of added toons
