@@ -56,6 +56,7 @@ end
 -- ImGui main function for rendering the UI window
 ImGuiFileDialog.draw_file_selector = function(path, pattern)
     openGUI, shouldDrawGUI = ImGui.Begin('Select a file...', openGUI)
+    ImGui.SetWindowSize(400,300,ImGuiCond.Appearing)
     if shouldDrawGUI then
         ImGui.TextWrapped('Each item should be on its own line in the text file. No commas or quotes. Exact spelling and capitalization matter. There is no undo, so be sure your file is formatted correctly before importing.')
         if ImGui.Button('Open') then

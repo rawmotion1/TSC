@@ -3,7 +3,7 @@
 local mq = require('mq')
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.0'
+local version = '1.0.1'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1006,6 +1006,20 @@ local function getMulePeers()
     end
 end
 
+--Populate combo box for give drop down
+local giveComboOptions = {}
+local function getGivePeers()
+    giveComboOptions = {}
+    for _,name in pairs(peerTable) do
+        local skip = false
+        if not mq.TLO.NearestSpawn('='..name)() then
+            skip = true
+        end
+        if skip == false then
+            table.insert(giveComboOptions, name)
+        end
+    end
+end
 
 --Constantly check peers (included in main loop)
 local peers
@@ -1026,6 +1040,7 @@ local function getPeers()
         end
         getToonPeers()
         getMulePeers()
+        getGivePeers()
         setObservers()
     end
 end
@@ -1348,7 +1363,7 @@ local function restWindow()
                         end
 
                         ImGui.TableNextColumn()
-                        if ImGui.Button('Skip##'..toon.name..item) then
+                        if ImGui.Button('\xef\x81\x9e Skip##'..toon.name..item) then
                             update('skip')
                         end
                         if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip this item once.') end
@@ -1435,7 +1450,7 @@ local function moveWindow()
                         end
 
                         ImGui.TableNextColumn()
-                        if ImGui.Button('Skip##'..toon..item) then
+                        if ImGui.Button('\xef\x81\x9e Skip##'..toon..item) then
                             update('skip')
                         end
                         if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip this item once.') end
@@ -1484,7 +1499,7 @@ local function moveWindow()
                         end
 
                         ImGui.TableNextColumn()
-                        if ImGui.Button('Skip##'..toon..item) then
+                        if ImGui.Button('\xef\x81\x9e Skip##'..toon..item) then
                             update('skip')
                         end
                         if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip this item once.') end
@@ -1533,7 +1548,7 @@ local function moveWindow()
                         end
 
                         ImGui.TableNextColumn()
-                        if ImGui.Button('Skip##'..toon..item) then
+                        if ImGui.Button('\xef\x81\x9e Skip##'..toon..item) then
                             update('skip')
                         end
                         if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip this item once.') end
@@ -1625,7 +1640,7 @@ local function matchWindow()
                         end
 
                         ImGui.TableNextColumn()
-                        if ImGui.Button('Skip##'..toon..item) then
+                        if ImGui.Button('\xef\x81\x9e Skip##'..toon..item) then
                             update('skip')
                         end
                         if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip trading this item once.') end
@@ -2082,8 +2097,13 @@ local function tscWindow()
                         ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
                         if ImGui.BeginPopupModal('Tidy up confirmation##'..toon.name, nil, ImGuiWindowFlags.AlwaysAutoResize) then
                             ImGui.TextColored(1,1,0,1,'Ready?')
+                            ImGui.Text('Item mode:')
+                            ImGui.SameLine()
+                            ImGui.TextColored(0,1,0,1, itemMode)
                             ImGui.TextWrapped(fname(toon.name)..tip.confirmself)
-                            if ImGui.Button('Tidy up') then activeToon = toon.name selfNow = true ImGui.CloseCurrentPopup() end
+                            ImGui.PushStyleColor(ImGuiCol.Button, 0,1,0,.5)
+                                if ImGui.Button('Tidy up') then activeToon = toon.name selfNow = true ImGui.CloseCurrentPopup() end
+                            ImGui.PopStyleColor()
                             ImGui.SameLine()
                             ImGui.PushStyleColor(ImGuiCol.Button, 1,0,0,.5)
                                 if ImGui.Button('Cancel') then ImGui.CloseCurrentPopup() end
@@ -2101,9 +2121,11 @@ local function tscWindow()
                         ImGui.TextColored(1,1,0,1,'Who should '..fname(toon.name)..' give to?')
                         ImGui.Text('DanNet peers:')
                         if ImGui.BeginCombo('##GiveCombo', fname(giveTarget)) then
-                            for _,peer in pairs(toons) do
-                                if ImGui.Selectable(fname(peer.name), giveTarget == peer.name) then
-                                    giveTarget = peer.name
+                            for _,peer in pairs(giveComboOptions) do
+                                if toon.name ~= peer then
+                                    if ImGui.Selectable(fname(peer), giveTarget == peer) then
+                                        giveTarget = peer
+                                    end
                                 end
                             end
                             ImGui.EndCombo()
@@ -2115,7 +2137,11 @@ local function tscWindow()
                         ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
                         if ImGui.BeginPopupModal('Give confirmation##'..toon.name, nil, ImGuiWindowFlags.AlwaysAutoResize) then
                             ImGui.TextColored(1,1,0,1,'Ready?')
+                            ImGui.Text('Item mode:')
+                            ImGui.SameLine()
+                            ImGui.TextColored(0,1,0,1, itemMode)
                             ImGui.TextWrapped(fname(toon.name)..' will give all their '..itemMode..' items to '..fname(giveTarget)..'.')
+                            ImGui.PushStyleColor(ImGuiCol.Button, 0,1,0,.5)
                             if ImGui.Button('Give') then
                                 if toon.name == giveTarget then
                                     print('\at[TsC]\ao You can\'t give your yourself!')
@@ -2126,6 +2152,7 @@ local function tscWindow()
                                 end
                                 ImGui.CloseCurrentPopup()
                             end
+                            ImGui.PopStyleColor()
                             ImGui.SameLine()
                             ImGui.PushStyleColor(ImGuiCol.Button, 1,0,0,.5)
                                 if ImGui.Button('Cancel') then ImGui.CloseCurrentPopup() end
@@ -2188,7 +2215,7 @@ local function tscWindow()
                 end
                 ImGui.EndCombo()
             end
-            if ImGui.Button('Add all in zone') then addAllInZone() end
+            if ImGui.Button('Add all in zone') then addAllInZone() ImGui.CloseCurrentPopup() end
             ImGui.EndPopup()
         end
 
@@ -2267,8 +2294,13 @@ local function tscWindow()
     ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
     if ImGui.BeginPopupModal('Consolidate confirmation', nil, ImGuiWindowFlags.AlwaysAutoResize) then
         ImGui.TextColored(1,1,0,1, 'Ready?')
+        ImGui.Text('Item mode:')
+        ImGui.SameLine()
+        ImGui.TextColored(0,1,0,1, itemMode)
         ImGui.TextWrapped(tip.goall)
-        if ImGui.Button('Consolidate all') then goNow = true ImGui.CloseCurrentPopup() end
+        ImGui.PushStyleColor(ImGuiCol.Button, 0,1,0,.5)
+            if ImGui.Button('Consolidate all') then goNow = true ImGui.CloseCurrentPopup() end
+        ImGui.PopStyleColor()
         ImGui.SameLine()
         ImGui.PushStyleColor(ImGuiCol.Button, 1,0,0,.5)
             if ImGui.Button('Cancel') then ImGui.CloseCurrentPopup() end

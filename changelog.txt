@@ -1,0 +1,9 @@
+v1.0.1 - 19.07.2023
+- Removed option to give to self in give list
+- Give list now shows all dannet peers in zone instead of added toons
+- Added icon for skip buttons
+- Add window now closes when you add all in zone
+- Set "add from file" window size on appearing
+- Improved color consistency of buttons
+- Added item mode to confirmation boxes
+- Added changelog.txt
