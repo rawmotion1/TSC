@@ -3,7 +3,7 @@
 local mq = require('mq')
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.2'
+local version = '1.0.3'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'

@@ -1,5 +1,6 @@
 require 'ImGui'
-local lfs = require 'lfs'
+local PackageMan = require('mq/PackageMan')
+local lfs = PackageMan.Require('luafilesystem', 'lfs')
 
 local ImGuiFileDialog = {}
 
