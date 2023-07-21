@@ -1,6 +1,3 @@
-v1.0.3 - 20.07.2023
-- Removed lfs.dll to use packageman instead
-
 v1.0.2 - 19.07.2023
 - Removed unecessary code in alphabatize function
 - Removed unecessary binds
