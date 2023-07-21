@@ -1,5 +1,4 @@
-require 'ImGui'
-local lfs = require 'lfs'
+local lfs = require ('lfs')
 
 local ImGuiFileDialog = {}
 

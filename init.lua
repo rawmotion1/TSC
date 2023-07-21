@@ -1,9 +1,14 @@
 --Tradeskill Consolidator (TSC) by Rawmotion
 --- @type Mq
 local mq = require('mq')
+
+require 'ImGui'
+local PackageMan = require('mq/PackageMan')
+PackageMan.Require('luafilesystem', 'lfs')
+
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.2'
+local version = '1.0.4'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
