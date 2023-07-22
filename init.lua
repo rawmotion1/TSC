@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.4'
+local version = '1.0.5'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -642,7 +642,7 @@ local function rest(who)
             end
         end
     end
-    
+
 
     for _,toon in pairs(who) do
         if toon.leftovers ~= 'Off' then
@@ -675,7 +675,7 @@ local function calcStats(who, what)
     if what == 'Collectibles' then scan(who,1,1,19) else scan(who) end
 
     print('\at[TsC]\ao------Approximate results------')
-    
+
     local totalSavings = 0
     for _,toon in pairs(who) do
         local path = "TSC/tmp/stats_"..toon.name..".lua"
@@ -694,7 +694,7 @@ local function calcStats(who, what)
         local pis
         if itemDifference < 0 then pid = '\ao(\ag'..itemDifference..'\ao)' elseif itemDifference > 0 then pid = '\ao(\ar+'..itemDifference..'\ao)' else pid = '\ao(\awnc\ao)' end
         if slotDifference < 0 then pis = '\ao(\ag'..slotDifference..'\ao)' elseif slotDifference > 0 then pis = '\ao(\ar+'..slotDifference..'\ao)' else pis = '\ao(\awnc\ao)' end
-        
+
         print('\at[TsC]\ar '..toon.name..' \ao had \ay'..toonStats['beforeItems']..' \aoitems using \ay'..toonStats['beforeSlots']..'\ao slots, now has \am'..toonStats['afterItems']..' \ao items '..pid..' using \am'..toonStats['afterSlots']..' \aoslots '..pis..'.')
         totalSavings = totalSavings - slotDifference
     end
@@ -740,7 +740,7 @@ local function go(what)
 
     if listSize(toons) < 1 then print('\at[TsC]\ao Add some toons first.') return end
 
-    pause(toons)
+    pause()
 
     createStats(toons)
 
@@ -2099,8 +2099,8 @@ local function tscWindow()
 
                     --Give pop-up
                     if ImGui.BeginPopup('give##'..toon.name) then
-                        ImGui.TextColored(1,1,0,1,'Who should '..fname(toon.name)..' give to?')
-                        ImGui.Text('DanNet peers:')
+                        ImGui.TextColored(1,1,0,1,'Give all '..itemMode..' items to another?')
+                        ImGui.Text('Who should '..fname(toon.name)..' give to?')
                         if ImGui.BeginCombo('##GiveCombo', fname(giveTarget)) then
                             for _,peer in pairs(giveComboOptions) do
                                 if toon.name ~= peer then
@@ -2112,7 +2112,11 @@ local function tscWindow()
                             ImGui.EndCombo()
                         end
 
-                        if ImGui.Button('Start##'..toon.name) then ImGui.OpenPopup('Give confirmation##'..toon.name) end
+                        if ImGui.Button('Start##'..toon.name) then
+                            if giveTarget ~= '' then
+                                ImGui.OpenPopup('Give confirmation##'..toon.name)
+                            end
+                        end
 
                         --Give confirmation modal
                         ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)

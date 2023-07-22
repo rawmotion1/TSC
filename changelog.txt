@@ -1,3 +1,8 @@
+v1.0.5 - 22.07.2023
+- Minor code cleanup in init.lua
+- Updated messaging around Give
+- Can no longer run Give without selecting a target
+
 v1.0.4 - 21.07.2023
 - PackageMan no longer crashes on install
 
