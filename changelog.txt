@@ -1,3 +1,7 @@
+v1.0.6 - 23.07.2023
+- Toon list is now alphabetized
+- Fixed bug with sorting mules
+
 v1.0.5 - 22.07.2023
 - Minor code cleanup in init.lua
 - Updated messaging around Give

@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.5'
+local version = '1.0.6'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -140,6 +140,8 @@ local function reIndex(mytable)
         settings['mules'] = reindex
     elseif mytable == artisan then
         artisan = reindex
+    elseif mytable == alltoons then
+        alltoons = reindex
     end
     save()
 end
@@ -153,20 +155,42 @@ local function checkBanker()
     return true
 end
 
+--Alphabetize toons
+local function sortToons(a, b)
+    local delta = 0
+    if a and b then
+        if a.name < b.name then
+            delta = -1
+        elseif b.name < a.name then
+            delta = 1
+        else
+            delta = 0
+        end
+        if delta ~= 0 then
+            return delta < 0
+        end
+        return a.name < b.name
+    end
+    return false
+end
+
 --Check which toons are in-zone
 local toons = {}
 local function checkToons()
-    local tmptable = {}
+    reIndex(alltoons)
+    table.sort(alltoons, sortToons)
+    
+    local tmptableOn = {}
+
     for index,toon in pairs(alltoons) do
         if mq.TLO.NearestSpawn('='..toon.name)() == nil then
             alltoons[index].inzone = false
         else
             alltoons[index].inzone = true
-            local entry = toon
-            table.insert(tmptable, entry)
+            table.insert(tmptableOn, toon)
         end
     end
-    toons = tmptable --Create reduced toons table if not all toons are in-zone
+    toons = tmptableOn --Toons online and in zone
 end
 
 --Check mule inventories
@@ -1869,7 +1893,7 @@ local function toonContext(n, toon)
     if ImGui.BeginPopupContextItem('##'..toon) then
         if ImGui.Selectable('\xef\x89\x8e'..' Make tiebreaker') then settings.tiebreaker = alltoons[n].name save() end
         if ImGui.Selectable('\xef\x82\x91'..'  Make artisan') then settings.artisan = alltoons[n].name save() end
-        if ImGui.Selectable('\xef\x8a\x90'..'  Add to mules') then addMule(alltoons[n].name) save() end
+        if ImGui.Selectable('\xef\x8a\x90'..'  Add to mules') then addMule(alltoons[n].name) reIndex(settings['mules']) save() end
         if ImGui.Selectable('\xef\x81\x9e'..'  Edit personal ignore list') then
             whosIgnore = toon
             local List, error = loadfile(mq.configDir..'/TSC/ignore_'..toon..'.lua')
