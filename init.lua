@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.6'
+local version = '1.0.7'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -225,7 +225,7 @@ local function listSize(who)
 end
 
 --Emergency stop
-local function stopAll()
+local function stopAll(restart)
     status = 'Stopping...'
     print('\at[TsC]\ay Stopping all processes and restarting.')
     mq.cmd('/dgae /squelch /lua stop TSC/scan.lua')
@@ -236,7 +236,9 @@ local function stopAll()
     mq.cmd('/dgae /squelch /lua stop TSC/depot.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/leftover.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/give.lua')
-    mq.cmd('/lua run TSC/restart')
+    if restart == true then
+        mq.cmd('/lua run TSC/restart')
+    end
     mq.exit()
 end
 
@@ -2332,7 +2334,7 @@ local function tscWindow()
 
     --Stop button
     ImGui.PushStyleColor(ImGuiCol.Button, 1, 0, 0, .5)
-        if ImGui.Button('Stop all') then stopAll() end
+        if ImGui.Button('Stop all') then stopAll(true) end
     ImGui.PopStyleColor()
     if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.stop) end
     ImGui.SameLine()
@@ -2356,13 +2358,15 @@ local function initGui()
         openGui, drawGui = ImGui.Begin('TS Consolidator##'..me, openGui)
         if drawGui then tscWindow() end
         ImGui.End()
+    else
+        stopAll()
     end
 end
 
 mq.imgui.init('TSC', initGui)
 
 local terminate = false
-while not terminate do
+while openGui do
     checkToons()
     checkMules()
     getPeers()
