@@ -108,7 +108,7 @@ local function giveToMules(previousMule)
 
     if mule then
 
-        thisTradeCount, muleList, full = utils.tradeNew(mule, muleList, false)
+        thisTradeCount, muleList, full = utils.tradeNewest(mule, muleList, false)
         muleCount = muleCount + thisTradeCount
 
         if full == true then --Target's inventory is full, cancel any repeats.

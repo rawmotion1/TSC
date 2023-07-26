@@ -264,6 +264,7 @@ local function defineMatches()
             end
         end
     end
+
     mq.pickle(matchesPath, matches)
     print('\at[TsC]\ao Done matching. Compared \ag'..lqtable..' \aounique items among \ag'..ltoons..' \aotoons and found \ag'..matchCount..' \aomatches.')
     mq.cmd('/tsc donematching')

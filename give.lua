@@ -83,7 +83,7 @@ local function give()
         end
     end
 
-    thisTradeCount, items, full = utils.tradeNew(name, items, false)
+    thisTradeCount, items, full = utils.tradeNewest(name, items, false)
     tradeCount = tradeCount + thisTradeCount
     
     if full == true then --Target's inventory is full, cancel any repeats.
