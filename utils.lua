@@ -338,7 +338,7 @@ function utils.tradeNewest(receiver, list, override)
                             bag = tonumber(bag) - 22
                             mq.cmdf('/itemnotify in pack%s %s leftmouseup', bag, slot)
                         else
-                            mq.cmdf('/itemnotify %s leftmouseup', bag)
+                            mq.cmdf('/shift /itemnotify %s leftmouseup', loc)
                         end
 
                         if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
