@@ -1,3 +1,6 @@
+v1.0.9 - 26.07.2023
+- Should stop trying to depot non TS items that have identical names to TS items
+
 v1.0.8 - 26.07.2023
 - Should no longer have issues with different items that have identical names
 

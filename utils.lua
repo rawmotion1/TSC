@@ -537,34 +537,42 @@ function utils.depot(depotList, checkSize)
 
                     utils.pickup(item)
 
-                    mq.cmd('/foreground self.Name')
+                    local skip = false
+                    if mq.TLO.Cursor.Tradeskills() then
 
-                    local attempts = 0
-                    while mq.TLO.Cursor() do
-                        mq.cmdf('/mouseto %s %s', mouseLocX, mouseLocY)
-                        mq.delay(100)
-                        mq.cmd('/click left')
-                        if mq.TLO.Window('ConfirmationDialogBox')() then
-                            mq.cmd('/no') --Avoid accidentally dropping items on the ground
-                        end
-                        mq.delay(300)
+                        mq.cmd('/foreground self.Name')
 
-                        attempts = attempts + 1
-                        if attempts > 9 then
-                            utils.resume = false
-                            while utils.resume == false do
-                                mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \aycan\'t depost. Be sure no Lua windows are obstructing their depot window.', mq.TLO.Me.Name())
-                                mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Type \ag/tsresume\ay from the stuck toon\'s EQ window to try again.')
-                                local function stop()
-                                    return utils.resume
+                        local attempts = 0
+                        while mq.TLO.Cursor() do
+                            mq.cmdf('/mouseto %s %s', mouseLocX, mouseLocY)
+                            mq.delay(100)
+                            mq.cmd('/click left')
+                            if mq.TLO.Window('ConfirmationDialogBox')() then
+                                mq.cmd('/no') --Avoid accidentally dropping items on the ground
+                            end
+                            mq.delay(300)
+
+                            attempts = attempts + 1
+                            if attempts > 9 then
+                                utils.resume = false
+                                while utils.resume == false do
+                                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \aycan\'t depost. Be sure no Lua windows are obstructing their depot window.', mq.TLO.Me.Name())
+                                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Type \ag/tsresume\ay from the stuck toon\'s EQ window to try again.')
+                                    local function stop()
+                                        return utils.resume
+                                    end
+                                    mq.delay(10000, stop)
+                                    if utils.resume == true then attempts = 0 end
                                 end
-                                mq.delay(10000, stop)
-                                if utils.resume == true then attempts = 0 end
                             end
                         end
 
+                    else
+                        skip = true
+                        utils.autoinv()
                     end
-                until mq.TLO.FindItemCount('='..item)() == 0
+
+                until mq.TLO.FindItemCount('='..item)() == 0 or skip == true
             else
                 print('\at[TsC]\ao Tradeskill depot is full!.')
                 utils.cleanup()
