@@ -47,7 +47,7 @@ end
 
 function utils.navTarget(name)
     utils.cleanup()
-    local target = mq.TLO.NearestSpawn('"='..name'"')()
+    local target = mq.TLO.NearestSpawn('"='..name..'"')()
     if target == nil then
         print('\at[TsC]\ao Target not found in zone. Stopping.')
         return
