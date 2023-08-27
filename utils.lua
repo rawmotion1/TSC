@@ -47,7 +47,7 @@ end
 
 function utils.navTarget(name)
     utils.cleanup()
-    local target = mq.TLO.NearestSpawn(name)()
+    local target = mq.TLO.NearestSpawn('"='..name'"')()
     if target == nil then
         print('\at[TsC]\ao Target not found in zone. Stopping.')
         return
@@ -63,7 +63,7 @@ function utils.navTarget(name)
         end
     end
     while mq.TLO.Target.Name() ~= target do
-        mq.cmdf('/target %s', target)
+        mq.cmdf('/target "=%s"', target)
         mq.delay(100)
     end
 end
@@ -346,7 +346,7 @@ function utils.tradeNewest(receiver, list, override)
                             mq.delay(100)
                         else
                             repeat
-                                if mq.TLO.Target.Name() ~= receiver then mq.cmdf('/target %s', receiver) mq.delay(100) end
+                                if mq.TLO.Target.Name() ~= receiver then mq.cmdf('/target "=%s"', receiver) mq.delay(100) end
                                 mq.cmd('/usetarget')
                                 mq.delay(1000)
                             until mq.TLO.Cursor() == nil
