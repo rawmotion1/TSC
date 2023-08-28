@@ -1,3 +1,7 @@
+v1.0.14 - 28.08.2023
+- Fixed bug with picking up items
+- Fixed bug with toons with low inventory space
+
 v1.0.13 - 28.08.2023
 - Fixed bug with targeting banker
 

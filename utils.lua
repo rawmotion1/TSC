@@ -319,7 +319,7 @@ function utils.tradeNewest(receiver, list, override)
 
         if mq.TLO.FindItemCount('='..item)() > 0 then
 
-            if tonumber(mq.TLO.DanNet(receiver).O('Me.FreeInventory')()) > 7 or override == true then
+            if tonumber(mq.TLO.DanNet(receiver).O('Me.FreeInventory')()) > 7 then
 
                 if mq.TLO.Spawn(receiver).Distance() > 20 then
                     utils.navTarget(receiver)
@@ -342,12 +342,18 @@ function utils.tradeNewest(receiver, list, override)
                         print('\at[TsC]\ao Giving \ay'..item..' \aoto \ar'..receiver)
 
                         local bag, slot = string.match(loc, "(%d+)-(%d+)")
-                        
+
                         if slot then
                             bag = tonumber(bag) - 22
-                            mq.cmdf('/itemnotify in pack%s %s leftmouseup', bag, slot)
+                            repeat
+                                mq.cmdf('/shift /itemnotify in pack%s %s leftmouseup', bag, slot)
+                                mq.delay(100)
+                            until mq.TLO.Cursor() ~= nil
                         else
-                            mq.cmdf('/shift /itemnotify %s leftmouseup', loc)
+                            repeat
+                                mq.cmdf('/shift /itemnotify %s leftmouseup', loc)
+                                mq.delay(100)
+                            until mq.TLO.Cursor() ~= nil
                         end
 
                         if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
