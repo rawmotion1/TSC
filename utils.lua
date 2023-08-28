@@ -45,9 +45,14 @@ function utils.pickup(item, loc)
     end
 end
 
-function utils.navTarget(name)
+function utils.navTarget(name, bank)
     utils.cleanup()
-    local target = mq.TLO.NearestSpawn('"='..name..'"')()
+    local target
+    if bank == true then
+        target = mq.TLO.NearestSpawn(name)()
+    else
+        target = mq.TLO.NearestSpawn('"='..name..'"')()
+    end
     if target == nil then
         print('\at[TsC]\ao Target not found in zone. Stopping.')
         return
@@ -63,7 +68,11 @@ function utils.navTarget(name)
         end
     end
     while mq.TLO.Target.Name() ~= target do
-        mq.cmdf('/target "=%s"', target)
+        if bank == true then
+            mq.cmdf('/target %s', target)
+        else
+            mq.cmdf('/target "=%s"', target)
+        end
         mq.delay(100)
     end
 end
@@ -78,7 +87,7 @@ function utils.banker()
         end
     end
 
-    utils.navTarget(banker)
+    utils.navTarget(banker, true)
 
     while not mq.TLO.Window('BigBankWnd').Open() do
         mq.cmd('/usetarget')

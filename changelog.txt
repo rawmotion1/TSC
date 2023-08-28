@@ -1,3 +1,6 @@
+v1.0.13 - 28.08.2023
+- Fixed bug with targeting banker
+
 v1.0.12 - 27.08.2023
 - Typo
 
