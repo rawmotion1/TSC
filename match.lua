@@ -106,15 +106,15 @@ local modes = {}
 for owner,_ in pairs(allitems) do
     for _,toon in pairs(toons) do
         if toon.name == owner and toon.mode == 'Generous' then
-            modes[toon] = 2
+            modes[toon.name] = 2
         elseif toon.name == owner and toon.mode == 'Greedy' then
-            modes[toon] = 3
+            modes[toon.name] = 3
         elseif toon.name == owner and toon.mode ~= 'Default' then
-            modes[toon] = 1
+            modes[toon.name] = 1
         end
     end
 end
-
+mq.pickle('TSC/tmp/modes.lua', modes)
 --------Compare everyone's items--------
 local matches = {}
 local function defineMatches()

@@ -1,3 +1,6 @@
+v1.0.15 - 08.09.2023
+- Modes should work properly again
+
 v1.0.14 - 28.08.2023
 - Fixed bug with picking up items
 - Fixed bug with toons with low inventory space
