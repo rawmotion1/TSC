@@ -4,8 +4,7 @@ local utils = require('utils')
 
 local args = {...}
 local mode = tonumber(args[1]) --1 normal, 2 give mode
-local scope = tonumber(args[2]) -- 1 everywhere, 4 inventory
-local what = tonumber(args[3]) -- 42 mats, 19 collectibles
+local what = tonumber(args[2]) -- 42 mats, 19 collectibles
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
@@ -110,10 +109,10 @@ print('\at[TsC]\ao Scanning items...')
 
 
 --Scan this toon. Send scope, ignore file, blank items table, ts or col mode. Returns # items, # slots, and populated items table.
-local countSlots, countItems = utils.scan(scope, ignore, items, what)
+local countSlots, countItems = utils.scantwo(items, ignore, what, settings.includePlots)
 
 --Look for multiple incomplete stacks in inventory and restack them
-utils.sortBags(items, ignore)
+utils.sortBags(items)
 
 --Save items file for this toon
 mq.pickle(itemsPath, items)

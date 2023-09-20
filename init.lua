@@ -1,14 +1,14 @@
 --Tradeskill Consolidator (TSC) by Rawmotion
 --- @type Mq
 local mq = require('mq')
-
+local utils = require('utils')
 require 'ImGui'
 local PackageMan = require('mq/PackageMan')
 PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '1.0.15'
+local version = '1.0.10t'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -20,6 +20,8 @@ local movePath = 'TSC/tmp/movetable.lua'
 
 local settings = {}
 local alltoons = {}
+local toons = {} --Only in-zone toons
+local peerTable = {}
 local ignore = {}
 local pignoreList = {}
 local artisan = {}
@@ -30,7 +32,7 @@ local matches = {}
 local function createFiles(file)
 
     if file == 'settings' then
-        settings = { ['tiebreaker'] = 'Not set', ['artisan'] = 'Not set', ['stats'] = true, ['mules'] = {}, ['driver'] = '' }
+        settings = { ['tiebreaker'] = 'Not set', ['artisan'] = 'Not set', ['stats'] = true, ['includePlots'] = false, ['preferPlots'] = false, ['mules'] = {}, ['driver'] = '' }
         mq.pickle(settingPath, settings)
         print('\at[TsC]\ao Creating \ayTSC/settings.lua \aoin your config folder.')
     end
@@ -64,6 +66,12 @@ local function loadFiles()
     elseif loadSettings then
         settings = loadSettings()
     end
+    --Add additional settings
+    if settings.includePlots == nil then
+        settings.includePlots = false
+    elseif settings.preferPlots == nil then
+        settings.preferPlots = false
+    end
 
     local loadToons, toonError = loadfile(mq.configDir..'/'..toonPath)
     if toonError then
@@ -91,36 +99,21 @@ loadFiles()
 
 print('\at[TsC]\ao Welcome to TS Consolidator v'..version)
 
-
-
----------------------Helper functions-------------------------
-
 settings.driver = me
 mq.pickle(settingPath, settings)
 local status = 'Idle'
 
---Toggle
-local function switch(v)
-    v = not v
-end
-
---Set observers on mules
-local function setObservers()
-    for _,v in pairs(settings['mules']) do
-        mq.cmdf('/dobserve %s -q Me.FreeInventory', v.name)
-    end
-end
-setObservers()
+---------------------Helper functions-------------------------
 
 --Save settings and files
 local function save(who)
-    mq.pickle(toonPath, alltoons)
-    mq.pickle(settingPath, settings)
     if who == '' or who == nil then
         mq.pickle(ignorePath, ignore)
     elseif who ~= nil then
         mq.pickle('TSC/ignore_'..who..'.lua', pignoreList)
     end
+    mq.pickle(toonPath, alltoons)
+    mq.pickle(settingPath, settings)
     mq.pickle(artisanPath, artisan)
     mq.pickle(movePath, moveTable)
     mq.pickle(matchesPath, matches)
@@ -146,42 +139,25 @@ local function reIndex(mytable)
     save()
 end
 
---Make sure banker is in zone
-local function checkBanker()
-    if mq.TLO.NearestSpawn('banker').Name() == nil then
-        print('\at[TsC]\ao There is no banker in this zone. Stopping.')
-        return false
+--Turn active toon into single-entry table for solo routines
+local function checkName(name)
+    local single = {[1]={}}
+    for _,toon in pairs(alltoons) do
+        if toon.name == name then
+            single[1] = toon
+        end
     end
-    return true
+    return single
 end
 
---Alphabetize toons
-local function sortToons(a, b)
-    local delta = 0
-    if a and b then
-        if a.name < b.name then
-            delta = -1
-        elseif b.name < a.name then
-            delta = 1
-        else
-            delta = 0
-        end
-        if delta ~= 0 then
-            return delta < 0
-        end
-        return a.name < b.name
-    end
-    return false
-end
 
---Check which toons are in-zone
-local toons = {}
+---------------------------Toon management---------------------------
+
+--Check which toons are in-zone and populate toons table (included in main loop)
 local function checkToons()
     reIndex(alltoons)
-    table.sort(alltoons, sortToons)
-    
+    table.sort(alltoons, utils.sortToons)
     local tmptableOn = {}
-
     for index,toon in pairs(alltoons) do
         if mq.TLO.NearestSpawn('='..toon.name)() == nil then
             alltoons[index].inzone = false
@@ -193,7 +169,7 @@ local function checkToons()
     toons = tmptableOn --Toons online and in zone
 end
 
---Check mule inventories
+--Check mule inventories (included in main loop)
 local function checkMules()
     for index,mule in pairs(settings.mules) do
         if mq.TLO.NearestSpawn('='..mule.name)() then
@@ -204,42 +180,109 @@ local function checkMules()
     end
 end
 
---Turn active toon into single-entry table
-local function checkName(name)
-    local single = {[1]={}}
-    for _,toon in pairs(alltoons) do
-        if toon.name == name then
-            single[1] = toon
+--Set observers on mules
+local function setObservers()
+    for _,v in pairs(settings['mules']) do
+        mq.cmdf('/dobserve %s -q Me.FreeInventory', v.name)
+    end
+end
+setObservers()
+
+--Populate combo box for adding toons
+local toonComboOptions = {}
+local function getToonPeers()
+    toonComboOptions = {}
+    for _,name in pairs(peerTable) do
+        local skip = false
+        for index,toon in pairs(alltoons) do
+            if toon.name == name then
+                skip = true
+            end
+        end
+        if skip == false then
+            table.insert(toonComboOptions, name)
         end
     end
-    return single
+    --Remove option from combo if they're added to toons
+    for k,name in pairs(toonComboOptions) do
+        for index,toon in pairs(alltoons) do
+            if name == toon.name then
+                toonComboOptions[k] = nil
+            end
+        end
+    end
 end
 
---Determine lize of given list
-local function listSize(who)
-    local count = 0
-    for _,v in pairs(who) do
-        count = count + 1
+--Populate combo box for adding mules
+local muleComboOptions = {}
+local function getMulePeers()
+    muleComboOptions = {}
+    for _,name in pairs(peerTable) do
+        local skip = false
+        for index,mule in pairs(settings['mules']) do
+            if mule.name == name then
+                skip = true
+            end
+        end
+        if skip == false then
+            table.insert(muleComboOptions, name)
+        end
     end
-    return count
+    --Remove option from combo if they're added to mules
+    for k,name in pairs(muleComboOptions) do
+        for index,mule in pairs(settings['mules']) do
+            if name == mule.name then
+                muleComboOptions[k] = nil
+            end
+        end
+    end
 end
 
---Emergency stop
-local function stopAll(restart)
-    status = 'Stopping...'
-    print('\at[TsC]\ay Stopping all processes and restarting.')
-    mq.cmd('/dgae /squelch /lua stop TSC/scan.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/match.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/grab.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/trade.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/bank.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/depot.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/leftover.lua')
-    mq.cmd('/dgae /squelch /lua stop TSC/give.lua')
-    if restart == true then
-        mq.cmd('/lua run TSC/restart')
+--Populate combo box for give drop down
+local giveComboOptions = {}
+local function getGivePeers()
+    giveComboOptions = {}
+    for _,name in pairs(peerTable) do
+        local skip = false
+        if not mq.TLO.NearestSpawn('='..name)() then
+            skip = true
+        end
+        if skip == false then
+            table.insert(giveComboOptions, name)
+        end
     end
-    mq.exit()
+end
+
+--Constantly check peers (included in main loop)
+local peers
+local function getPeers()
+    if peers ~= mq.TLO.DanNet.Peers() then --Something changed
+        peers = mq.TLO.DanNet.Peers()
+        for peer in peers:gmatch("([^|]+)|") do
+            peer = (peer:gsub("^%l", string.upper))
+            local skip = false
+            for _,v in pairs(peerTable) do
+                if v == peer then
+                    skip = true
+                end
+            end
+            if skip == false then
+                table.insert(peerTable, peer)
+            end
+        end
+        getToonPeers()
+        getMulePeers()
+        getGivePeers()
+        setObservers()
+    end
+end
+
+--Waiting function
+local function whileWaiting()
+    checkToons()
+    checkMules()
+    getPeers()
+    mq.delay(100)
 end
 
 
@@ -254,11 +297,19 @@ local openRest, drawRest = false, false
 
 
 
+
+
+
+
 ----------------------------------------
 
 --Routine functions
 
 ----------------------------------------
+
+
+
+
 
 
 ---------Pause/unpause macros and plugins---------
@@ -328,29 +379,28 @@ end
 --------Scan toons--------
 local scanCount
 local function stopWaitingScanning() scanCount = scanCount + 1 end
-local function scan(who, mode, scope, what)
-    --who: toon table, mode: 1 is normal 2 is givemode, scope: 1 is all 4 is inventory, what: 41 is mats 19 is collectibles
+local function scan(who, mode, what)
+    --who: toon table, mode: 1 is normal 2 is givemode, what: 41 is mats 19 is collectibles
     print('\at[TsC]\ao------\agStart\ao scanning routine.')
 
     if mode == nil then mode = 1 end
-    if scope == nil then scope = 1 end
     if what == nil then what = 41 end
 
-    local length = listSize(who)
+    local length = utils.listSize(who)
     if length > 0 then
         status = 'Scanning'
 
         for _,toon in pairs(who) do
             if toon.name == me then
-                mq.cmdf('/lua run TSC/scan %s %s %s', mode, scope, what)
+                mq.cmdf('/lua run TSC/scan %s %s', mode, what)
             else
-                mq.cmdf('/dex %s /squelch /lua run TSC/scan %s %s %s', toon.name, mode, scope, what)
+                mq.cmdf('/dex %s /squelch /lua run TSC/scan %s %s', toon.name, mode, what)
             end
         end
 
         scanCount = 0
         while scanCount < length do
-            mq.delay(100)
+            whileWaiting()
         end
         scanCount = 0
 
@@ -370,7 +420,7 @@ local function match()
 
     waitingMatches = true
     while waitingMatches do
-        mq.delay(100)
+        whileWaiting()
     end
 
     mq.delay(2000)
@@ -402,7 +452,7 @@ local function grab(who, what)
 
     if what == nil then what = 41 end
 
-    local length = listSize(who)
+    local length = utils.listSize(who)
     if length > 0 then
 
         for _,toon in pairs(who) do
@@ -415,7 +465,7 @@ local function grab(who, what)
 
         grabCount = 0
         while grabCount < length do
-            mq.delay(100)
+            whileWaiting()
         end
         grabCount = 0
 
@@ -433,7 +483,7 @@ local function trade(who)
 
     print('\at[TsC]\ao------\agStart\ao trading routine.')
 
-    local length = listSize(who)
+    local length = utils.listSize(who)
     if length > 0 then
 
         for _,toon in pairs(who) do
@@ -448,7 +498,7 @@ local function trade(who)
             print('\at[TsC]\ao Telling \ar'..toon.name..' \ao to start trading routine.')
 
             while waitingTrading do
-                mq.delay(100)
+                whileWaiting()
             end
         end
 
@@ -462,20 +512,26 @@ end
 local bankers
 local movers --Depot and bank to depot
 local dumpers
+local ploters
 local function createMoveList(who)
+    
+
     moveTable = {}
     bankers = {}
     movers = {}
+    ploters = {}
     dumpers = {}
     for index,toon in pairs(who) do
         local function createEntry()
             moveTable[toon.name] = {
                 tobank = {},
                 todepot = {},
+                toplot = {},
                 tomove = {},
                 rest = {},
                 shouldbank = false,
                 shouldmove = false,
+                shouldreal = false,
                 shoulddump = false,
             }
         end
@@ -489,10 +545,13 @@ local function createMoveList(who)
             items = allitems()
         end
 
+
         for item,_ in pairs(items) do
             local bank = false
             local inventory = false
             local depot = false
+            local plot = false
+            local plotLoc
             for _,v in pairs(items[item]['locations']) do
                 if string.match(v, "Bank") then
                     bank = true
@@ -502,6 +561,10 @@ local function createMoveList(who)
                 end
                 if string.match(v, "Personal") then
                     depot = true
+                end
+                if string.match(v, ",") then
+                    plot = true
+                    plotLoc = v
                 end
             end
             if inventory == true and bank == true and depot == false then
@@ -516,6 +579,11 @@ local function createMoveList(who)
                 if not moveTable[toon.name] then createEntry() end
                 table.insert(moveTable[toon.name]['tomove'], item)
                 moveTable[toon.name]['shouldmove'] = true
+            elseif inventory == true and plot == true and settings.preferPlots == true then
+                if not moveTable[toon.name] then createEntry() end
+                if not moveTable[toon.name]['toplot'][plotLoc] then moveTable[toon.name]['toplot'][plotLoc] = {} end
+                table.insert(moveTable[toon.name]['toplot'][plotLoc], item)
+                moveTable[toon.name]['shouldreal'] = true
             elseif inventory == true and bank == false and depot == false then
                 if not moveTable[toon.name] then createEntry() end
                 table.insert(moveTable[toon.name]['rest'], item)
@@ -537,6 +605,13 @@ local function createMoveList(who)
             for _,toon1 in pairs(alltoons) do
                 if toon1.name == toon then
                     table.insert(movers, toon1) --Add entry together with toon properties
+                end
+            end
+        end
+        if prop.shouldreal == true then
+            for _,toon1 in pairs(alltoons) do
+                if toon1.name == toon then
+                    table.insert(ploters, toon1) --Add entry together with toon properties
                 end
             end
         end
@@ -562,7 +637,7 @@ local function bank(who)
 
     print('\at[TsC]\ao------\agStart\ao banking routine.')
 
-    local length = listSize(who)
+    local length = utils.listSize(who)
 
     for _,toon in pairs(who) do
         if toon.name == me then
@@ -575,7 +650,7 @@ local function bank(who)
     bankCount = 0
     while bankCount < length do
         mq.doevents()
-        mq.delay(100)
+        whileWaiting()
     end
     bankCount = 0
 
@@ -594,7 +669,7 @@ local function depot(who)
 
     print('\at[TsC]\ao------\agStart\ao depot routine.')
 
-    local length = listSize(who)
+    local length = utils.listSize(who)
     if length > 0 then --Only show depot warning if movers > 0
 
         depotWarning = true
@@ -619,7 +694,7 @@ local function depot(who)
             print('\at[TsC]\ay Your window focus may change to \ar'..toon.name..'\'s \ayEQ window.')
 
             while waitingDepot do
-                mq.delay(100)
+                whileWaiting()
             end
         end
 
@@ -635,7 +710,7 @@ local waitingRest
 local function stopwaitingRest() waitingRest = false end
 local function rest(who)
 
-    if listSize(who) > 0 then
+    if utils.listSize(who) > 0 then
         openRest = true
         status = 'Awaiting user input'
         while openRest == true do
@@ -683,7 +758,7 @@ local function rest(who)
             print('\at[TsC]\ay Your window focus may change to \ar'..toon.name..'\'s \ayEQ window.')
 
             while waitingRest do
-                mq.delay(100)
+                whileWaiting()
             end
         end
     end
@@ -724,7 +799,7 @@ local function calcStats(who, what)
         print('\at[TsC]\ar '..toon.name..' \ao had \ay'..toonStats['beforeItems']..' \aoitems using \ay'..toonStats['beforeSlots']..'\ao slots, now has \am'..toonStats['afterItems']..' \ao items '..pid..' using \am'..toonStats['afterSlots']..' \aoslots '..pis..'.')
         totalSavings = totalSavings - slotDifference
     end
-    print('\at[TsC]\ao TOTAL: You freed up \ag'..totalSavings..' \aoslots across \ay'..listSize(who)..'\ao toons.')
+    print('\at[TsC]\ao TOTAL: You freed up \ag'..totalSavings..' \aoslots across \ay'..utils.listSize(who)..'\ao toons.')
 end
 
 
@@ -762,15 +837,15 @@ local skipTrading = false
 local skipMoving = false
 local function go(what)
     if status ~= 'Idle' then return end
-    if checkBanker() == false then return end
+    if utils.checkBanker() == false then return end
 
-    if listSize(toons) < 1 then print('\at[TsC]\ao Add some toons first.') return end
+    if utils.listSize(toons) < 1 then print('\at[TsC]\ao Add some toons first.') return end
 
     pause()
 
     createStats(toons)
 
-    if what == 'Collectibles' then scan(toons,1,1,19) else scan(toons) end
+    if what == 'Collectibles' then scan(toons,1,19) else scan(toons) end
     match()
 
     --Wait for trade confirmation
@@ -780,11 +855,11 @@ local function go(what)
     end
 
     if skipTrading == false then
-        if what == 'Collectibles' then grab(traders, 19) else grab(traders) end
+        if what == 'Collectibles' then grab(toons, 19) else grab(toons) end
 
         trade(traders)
 
-        if what == 'Collectibles' then scan(traders,1,1,19) else scan(traders) end
+        --if what == 'Collectibles' then scan(traders,1,1,19) else scan(traders) end
     else
         print('\at[TsC]\ay Skipping trade consolidation.')
     end
@@ -825,13 +900,13 @@ local function self(who, what)
     --Turn into single-entry table
     who = checkName(who)
 
-    if checkBanker() == false then return end
+    if utils.checkBanker() == false then return end
 
     pause()
 
     createStats(who)
 
-    if what == 'Collectibles' then scan(who,1,1,19) else scan(who) end
+    if what == 'Collectibles' then scan(who,1,19) else scan(who) end
 
     createMoveList(who)
 
@@ -877,30 +952,41 @@ local function give(who, receiver, itemmode, givebank, givedepot)
     end
 
     --figure out flags
-    local what, scope
+    local what
     if itemmode == 'Collectibles' then what = 19 else what = 41 end --Collectibles or ts
     if givebank == true or givedepot == true then
-        scope = 1
-        if not checkBanker() then --If give bank or depot, check banker
-            return
-        end
-    else
-        scope = 4
+        if not utils.checkBanker() then return end
     end
 
     pause()
 
-    scan(who, 2, scope, what)
+    scan(who, 2, what)
+
+    local items = {}
+    local toon = who[1].name
+    local scannedItems, error = loadfile(mq.configDir..'/'..'TSC/tmp/allitems_'..toon..'.lua')
+    if error then
+        print('\at[TsC]\ao Error loading allitems_'..toon..'.lua')
+    elseif scannedItems then
+        items = scannedItems()
+    end
 
     print('\at[TsC]\ao------\agStart\ao giving routine.')
+    if utils.listSize(items) > 0 then
 
-    status = 'Giving'
+        status = 'Giving'
 
-    local player = who[1].name
-    if player == me then
-        mq.cmdf('/lua run TSC/give %s %s %s %s %s', receiver, scope, what, givebank, givedepot)
+        local player = who[1].name
+        if player == me then
+            mq.cmdf('/lua run TSC/give %s %s %s %s %s', receiver, scope, what, givebank, givedepot)
+        else
+            mq.cmdf('/dex %s /lua run TSC/give %s %s %s %s %s', player, receiver, scope, what, givebank, givedepot)
+        end
     else
-        mq.cmdf('/dex %s /lua run TSC/give %s %s %s %s %s', player, receiver, scope, what, givebank, givedepot)
+        print('\at[TsC]\ao Nothing to give.')
+        print('\at[TsC]\ao------\arDone\ao giving routine.')
+        unpause()
+        status = 'Idle'
     end
 end
 
@@ -909,6 +995,12 @@ local function doneGiving()
     unpause()
     status = 'Idle'
 end
+
+
+
+
+
+
 
 
 ---------------------
@@ -951,6 +1043,8 @@ mq.bind('/tsc', binds)
 
 
 
+
+
 ----ANONYMIZOR----
 local function fname(name)
     return name
@@ -960,101 +1054,6 @@ end
 local goNow = false
 local selfNow = false
 local giveNow = false
-
-
---Get Dannet peers
-local peerTable = {}
-
-
---Populate combo box for adding toons
-local toonComboOptions = {}
-local function getToonPeers()
-    toonComboOptions = {}
-    for _,name in pairs(peerTable) do
-        local skip = false
-        for index,toon in pairs(alltoons) do
-            if toon.name == name then
-                skip = true
-            end
-        end
-        if skip == false then
-            table.insert(toonComboOptions, name)
-        end
-    end
-    --Remove option from combo if they're added to toons
-    for k,name in pairs(toonComboOptions) do
-        for index,toon in pairs(alltoons) do
-            if name == toon.name then
-                toonComboOptions[k] = nil
-            end
-        end
-    end
-end
-
-
---Populate combo box for adding mules
-local muleComboOptions = {}
-local function getMulePeers()
-    muleComboOptions = {}
-    for _,name in pairs(peerTable) do
-        local skip = false
-        for index,mule in pairs(settings['mules']) do
-            if mule.name == name then
-                skip = true
-            end
-        end
-        if skip == false then
-            table.insert(muleComboOptions, name)
-        end
-    end
-    --Remove option from combo if they're added to mules
-    for k,name in pairs(muleComboOptions) do
-        for index,mule in pairs(settings['mules']) do
-            if name == mule.name then
-                muleComboOptions[k] = nil
-            end
-        end
-    end
-end
-
---Populate combo box for give drop down
-local giveComboOptions = {}
-local function getGivePeers()
-    giveComboOptions = {}
-    for _,name in pairs(peerTable) do
-        local skip = false
-        if not mq.TLO.NearestSpawn('='..name)() then
-            skip = true
-        end
-        if skip == false then
-            table.insert(giveComboOptions, name)
-        end
-    end
-end
-
---Constantly check peers (included in main loop)
-local peers
-local function getPeers() 
-    if peers ~= mq.TLO.DanNet.Peers() then --Something changed
-        peers = mq.TLO.DanNet.Peers()
-        for peer in peers:gmatch("([^|]+)|") do
-            peer = (peer:gsub("^%l", string.upper))
-            local skip = false
-            for _,v in pairs(peerTable) do
-                if v == peer then
-                    skip = true
-                end
-            end
-            if skip == false then
-                table.insert(peerTable, peer)
-            end
-        end
-        getToonPeers()
-        getMulePeers()
-        getGivePeers()
-        setObservers()
-    end
-end
 
 
 --Add toons and mules
@@ -1430,6 +1429,56 @@ local function moveWindow()
                     ImGui.TableSetupColumn('Personal', ImGuiTableColumnFlags.WidthFixed, 90)
                     ImGui.TableHeadersRow()
 
+                    for index, plot in pairs(moveTable[toon]['toplot']) do
+                        for loc, item in pairs (moveTable[toon]['toplot'][index]) do
+                            local function update(arg)
+                                if not string.match(item, "be skipped") and not string.match(item, "ignored") then
+                                    if arg == 'skip' then
+                                        moveTable[toon]['toplot'][index] = item..' will be skipped once'
+                                    elseif arg == 'ignore' then
+                                        ignoreMatch(item, 'global')
+                                        moveTable[toon]['toplot'][index] = item..' is now globally ignored'
+                                    elseif arg == 'pignore' then
+                                        ignoreMatch(item, toon)
+                                        moveTable[toon]['toplot'][index] = item..' is now personally ignored'
+                                    end
+                                    save()
+                                end
+                            end
+
+                            ImGui.TableNextRow()
+                            ImGui.TableNextColumn()
+
+                            if string.match(item, "skipped") or string.match(item, "ignored") then
+                                ImGui.TextDisabled(item)
+                            else
+                                ImGui.Text(item..' will go to your plot')
+                            end
+
+                            ImGui.TableNextColumn()
+                            if ImGui.Button('\xef\x81\x9e Skip##'..toon..item) then
+                                update('skip')
+                            end
+                            if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip this item once.') end
+
+                            ImGui.TableNextColumn()
+                            ImGui.PushStyleColor(ImGuiCol.Button,1,1,0,.5)
+                            if ImGui.Button('\xef\x82\xac Ignore##'..toon..item) then
+                                update('ignore')
+                            end
+                            ImGui.PopStyleColor()
+                            if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to your global ingore file.') end
+
+                            ImGui.TableNextColumn()
+                            ImGui.PushStyleColor(ImGuiCol.Button, 0,1,1,.4)
+                            if ImGui.Button('\xef\x80\x87 Ignore##'..toon..item) then
+                                update('pignore')
+                            end
+                            ImGui.PopStyleColor()
+                            if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to this toon\'s personal ingore file.') end
+                        end
+                    end
+
                     for index, item in pairs(moveTable[toon]['tobank']) do
 
                         local function update(arg)
@@ -1589,12 +1638,12 @@ end
 --------Draw matches window--------
 local function matchWindow()
     if openMatch then
-        openMatch, drawMatch = ImGui.Begin('Match list', openMatch)
+        openMatch, drawMatch = ImGui.Begin('Step 1: Trade', openMatch)
         ImGui.SetWindowSize(600,850,ImGuiCond.Once)
         if drawMatch then
 
-            ImGui.TextColored(1,1,0,1,'Review items to trade.')
-            ImGui.TextWrapped('These are duplicate items that will be given to others. If you see anything that you would rather TSC ignored, you can make those changes now.')
+            ImGui.TextColored(1,1,0,1,'Review items to be traded')
+            ImGui.TextWrapped('These items must change hands to be consolidated. Upon continue, your toons will grab from the bank, depot, and -- if you have plots enabled -- real estate before trading. If there\'s anything you\'d rather TSC ignored, you can make those changes now.')
 
             ImGui.PushStyleColor(ImGuiCol.Button,0,1,0,.5)
                 if ImGui.Button('Continue') then continue = true openMatch = false end
@@ -2175,13 +2224,13 @@ local function tscWindow()
 
                         local update
                         giveBank, update = ImGui.Checkbox('Include bank', giveBank)
-                        if update then switch(giveBank) end
+                        if update then utils.switch(giveBank) end
 
                         ImGui.SameLine()
 
                         local update2
                         giveDepot, update2 = ImGui.Checkbox('Include depot', giveDepot)
-                        if update2 then switch(giveDepot) end
+                        if update2 then utils.switch(giveDepot) end
                     ImGui.EndPopup()
                     end
             end
@@ -2301,6 +2350,13 @@ local function tscWindow()
     if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.go) end
     ImGui.SameLine()
 
+    --Stop button
+    ImGui.PushStyleColor(ImGuiCol.Button, 1, 0, 0, .5)
+        if ImGui.Button('Stop all') then utils.stopAll(true) end
+    ImGui.PopStyleColor()
+    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.stop) end
+    ImGui.SameLine()
+
     --Consolidate all confirmation modal
     ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
     if ImGui.BeginPopupModal('Consolidate confirmation', nil, ImGuiWindowFlags.AlwaysAutoResize) then
@@ -2332,23 +2388,29 @@ local function tscWindow()
     end
     ImGui.SameLine()
 
-    --Stop button
-    ImGui.PushStyleColor(ImGuiCol.Button, 1, 0, 0, .5)
-        if ImGui.Button('Stop all') then stopAll(true) end
-    ImGui.PopStyleColor()
-    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.stop) end
+    --Real estate checkbox
+    local updateReal
+    settings.includePlots, updateReal = ImGui.Checkbox('Include plots', settings.includePlots)
+	if updateReal then utils.switch(settings.includePlots) save() end
+    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.real) end
     ImGui.SameLine()
+
+    if settings.includePlots == true then
+        local updateReal2
+        settings.preferPlots, updateReal2 = ImGui.Checkbox('Prefer plots', settings.preferPlots)
+        if updateReal2 then utils.switch(settings.preferPlots) save() end
+        if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.prefReal) end
+        ImGui.SameLine()
+    end
 
     --Stats checkbox
     local update
-    settings.stats, update = ImGui.Checkbox('Stats', settings.stats)
-	if update then switch(settings.stats) save() end
-    ImGui.SameLine()
-    ImGui.Text('\xee\xa2\x8f')
+    settings.stats, update = ImGui.Checkbox('Run stats', settings.stats)
+	if update then utils.switch(settings.stats) save() end
     if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.stats) end
     ImGui.SameLine()
 
-    ImGui.Text('v'..version)
+    ImGui.TextColored(1,1,1,.7,' v'..version)
 end
 
 local openGui, drawGui = true, true
@@ -2359,7 +2421,7 @@ local function initGui()
         if drawGui then tscWindow() end
         ImGui.End()
     else
-        stopAll()
+        utils.stopAll()
     end
 end
 
@@ -2367,9 +2429,7 @@ mq.imgui.init('TSC', initGui)
 
 local terminate = false
 while openGui do
-    checkToons()
-    checkMules()
-    getPeers()
+    whileWaiting()
     if goNow == true then goNow = false go(itemMode) end
     if selfNow == true then selfNow = false self(activeToon, itemMode) end
     if giveNow == true then giveNow = false give(activeToon, giveTarget, itemMode, giveBank, giveDepot) end

@@ -1,10 +1,12 @@
 --- @type Mq
 local mq = require('mq')
+local utils = require('utils')
 
 local settingPath = 'TSC/settings.lua'
 local toonPath = 'TSC/toons.lua'
 local artisanPath = 'TSC/artisan.lua'
 local matchesPath = 'TSC/tmp/matches.lua'
+local consolPath = 'TSC/tmp/consolidate.lua'
 
 local settings = {}
 local toons = {}
@@ -64,60 +66,62 @@ end
 --------Combine all toons' results into a single table--------
 local ltoons = 0
 local allitems = {}
-local function loadAllItems()
-    allitems = {}
-    for _,toon in pairs(toons) do
-        if mq.TLO.NearestSpawn('='..toon.name)() then --Only load results of toons in-zone
-            local path = 'TSC/tmp/allitems_'..toon.name..'.lua'
-            local table, error = loadfile(mq.configDir..'/'..path)
-            if error then
-                --nothing
-            elseif table then
-                allitems[toon.name] = {}
-                allitems[toon.name] = table()
-                ltoons = ltoons + 1
-            end
+for _,toon in pairs(toons) do
+    if mq.TLO.NearestSpawn('='..toon.name)() then --Only load results of toons in-zone
+        local path = 'TSC/tmp/allitems_'..toon.name..'.lua'
+        local table, error = loadfile(mq.configDir..'/'..path)
+        if error then
+            --nothing
+        elseif table then
+            --allitems[toon.name] = {}
+            allitems[toon.name] = table()
+            ltoons = ltoons + 1
         end
     end
 end
-loadAllItems()
 
-local lqtable = 0
-local qTable = {} 
-if isArtisan == true then --Add artisan itels list to table with "Asrtisan" as an owner
-    for _,item in pairs(artList) do
-        qTable[item] = {['Artisan'] = 0}
-    end
-end
 ---Reformat table for easier comparison
-for toon,item in pairs(allitems) do
-    for k,v in pairs(item) do
-        if not qTable[k] then
-            qTable[k] = {}
+local lqtable = 0
+local qTable = {}
+for toon,items in pairs(allitems) do
+    for item,qty in pairs(items) do
+        if not qTable[item] then
+            qTable[item] = {}
             lqtable = lqtable + 1
         end
-        qTable[k][toon] = v.totalQty
+        qTable[item][toon] = qty.total
     end
 end
 
+--Add artisan items to qTable
+if isArtisan == true then
+    for _,item in pairs(artList) do
+        if not qTable[item] then
+            qTable[item] = {['Artisan'] = 0}
+        else
+            qTable[item]['Artisan'] = 0
+        end
+    end
+end
+
+mq.pickle(mq.configDir..'/TSC/tmp/qtable.lua', qTable)
 
 --Get modes from toons.lua into a separate table
 local modes = {}
-for owner,_ in pairs(allitems) do
-    for _,toon in pairs(toons) do
-        if toon.name == owner and toon.mode == 'Generous' then
-            modes[toon.name] = 2
-        elseif toon.name == owner and toon.mode == 'Greedy' then
-            modes[toon.name] = 3
-        elseif toon.name == owner and toon.mode ~= 'Default' then
-            modes[toon.name] = 1
-        end
+for _,toon in pairs(toons) do
+    if toon.mode == 'Default' then
+        modes[toon.name] = 'Default'
+    elseif toon.mode == 'Greedy' then
+        modes[toon.name] = 'Greedy'
+    elseif toon.mode == 'Generous' then
+        modes[toon.name] = 'Generous'
     end
 end
-mq.pickle('TSC/tmp/modes.lua', modes)
+
+
 --------Compare everyone's items--------
 local matches = {}
-local function defineMatches()
+local function defineTrades()
 
     print('\at[TsC]\ao Tiebreaker: \ag'..tiebreaker)
     if isArtisan == true then
@@ -130,24 +134,37 @@ local function defineMatches()
 
     for item,player in pairs(qTable) do --Start iterating through items
 
-        --Create give entry in matches table
-        local function createEntries(givers,receiver,msg)
-            if not matches[receiver] then matches[receiver] = {} end
-            for _,giver in pairs(givers) do
-                if giver.name ~= receiver and giver.name ~= 'Artisan' then
-                    if not matches[giver.name] then matches[giver.name] = {} end
-                    matches[giver.name][item] = receiver
+        --Create trade entries function
+        local function createEntries(owners,receiver,msg)
+
+            for _,owner in pairs(owners) do
+                if owner.name ~= receiver and owner.name ~= 'Artisan' then
+                    if not matches[owner.name] then matches[owner.name] = {} end
+
+                    --Add destination in allitems table
+                    allitems[owner.name][item].destination = receiver
+
+                    --Add entry in trades table
+                    matches[owner.name][item] = receiver
 
                     if msg == 'art' then
-                        print('\at[TsC]\ag [Artisan] \ar'..giver.name..'\'s \ag'..giver.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho is the \ag Artisan')
+                        print('\at[TsC]\ag [Artisan] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho is the \ag Artisan')
                     elseif msg == 'tie' then
-                        print('\at[TsC]\ag [Tie] \ar'..giver.name..'\'s \ag'..giver.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aobecause there was a tie.')
+                        print('\at[TsC]\ag [Tie] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aobecause there was a tie.')
                     else
-                        print('\at[TsC]\ag [Match] \ar'..giver.name..'\'s \ag'..giver.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho has \ag'..player[receiver])
+                        print('\at[TsC]\ag [Match] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho has \ag'..player[receiver])
                     end
                     matchCount = matchCount + 1
                 end
+                mq.delay(100)
             end
+
+            --Ensure receiver is appears in the traders table. Necesry?
+            if not matches[receiver] then matches[receiver] = {} end
+
+            --Already add item that receiver will receive to their inventory to ensure item gets pulled into self-consolidate tree
+            allitems[receiver][item]['locations'] = allitems[receiver][item]['locations'] + 1
+            allitems[receiver][item]['inventory']['General'] = 1
         end
 
         local function findWinner(list,size)
@@ -183,31 +200,31 @@ local function defineMatches()
 
         if low > 1 then --This item is owned by more than one toon.
 
+            --Check if artisan item. if true, give to artisan and move to next item
             local artItem = false
-
             if isArtisan == true then
-                for _,owner in pairs(owners) do --If artisan item, give to artisan and move to next item
+                for _,owner in pairs(owners) do
                     if owner.name == 'Artisan' then artItem = true createEntries(owners, artisan, 'art') break end
                 end
             end
 
             if artItem == false then
 
-                local agGivers = {} --List of generous givers
-                local lag = 0 --List length
+                local generousToons = {} --List of generous givers
+                local lgen = 0 --List length
 
-                local nagGivers = {} --Inverse of agGivers (combo of modes 1 and 3)
-                local lnag = 0 --List length
+                local nonGenerousToons = {} --Inverse of agGivers (combo of modes 1 and 3)
+                local lnon = 0 --List length
 
-                local agReceivers = {} --List of greedy receivers
-                local lar = 0 --List length
+                local greedyToons = {} --List of greedy receivers
+                local lgre = 0 --List length
 
                 --Put all item owners with their quantities in the appropriate list
                 for _,owner in pairs(owners) do
-                    if modes[owner.name] == 2 then table.insert(agGivers, owner) lag = lag + 1
-                    elseif modes[owner.name] == 3 then table.insert(agReceivers, owner) lar = lar + 1
+                    if modes[owner.name] == 'Generous' then table.insert(generousToons, owner) lgen = lgen + 1
+                    elseif modes[owner.name] == 'Greedy' then table.insert(greedyToons, owner) lgre = lgre + 1
                     end
-                    if modes[owner.name] ~= 2 then table.insert(nagGivers, owner) lnag = lnag + 1 end
+                    if modes[owner.name] ~= 'Generous' then table.insert(nonGenerousToons, owner) lnon = lnon + 1 end
                 end
 
                 --Case1: There is one greedy receiver. Give to them.
@@ -220,31 +237,31 @@ local function defineMatches()
                 --Case7: Everyone is mode 1 but there's a tie. Give to tiebreaker.
                 --Case8: Everying is mode 1 and there is a winner. Give to them.
 
-                if lar == 1 then
+                if lgre == 1 then
                     --print('Case 1')
-                    createEntries(owners, agReceivers[1].name)
-                elseif lar > 1 then
-                    local winner = findWinner(agReceivers, lar)
+                    createEntries(owners, greedyToons[1].name)
+                elseif lgre > 1 then
+                    local winner = findWinner(greedyToons, lgre)
                     if winner == 'tie' then
                         --print('Case 2')
-                        createEntries(owners, agReceivers[1].name)
+                        createEntries(owners, greedyToons[1].name)
                     else
                         --print('Case 3')
                         createEntries(owners, winner)
                     end
-                elseif lag > 0 then
-                    if lag == low then
+                elseif lgen > 0 then
+                    if lgen == low then
                         --print('Case 4')
                         createEntries(owners, tiebreaker, 'tie')
                     else
-                        local winner = findWinner(nagGivers, lnag)
+                        local winner = findWinner(nonGenerousToons, lnon)
                         if winner == 'tie' then
-                            if modes[tiebreaker] ~= 2 then
+                            if modes[tiebreaker] ~= 'Generous' then
                                 --print('Case 5')
                                 createEntries(owners, tiebreaker, 'tie')
                             else
                                 --print('Case 5b')
-                                createEntries(owners, nagGivers[1])
+                                createEntries(owners, nonGenerousToons[1])
                             end
                         else
                             --print('Case 6')
@@ -264,9 +281,63 @@ local function defineMatches()
             end
         end
     end
-
-    mq.pickle(matchesPath, matches)
-    print('\at[TsC]\ao Done matching. Compared \ag'..lqtable..' \aounique items among \ag'..ltoons..' \aotoons and found \ag'..matchCount..' \aomatches.')
-    mq.cmd('/tsc donematching')
 end
-defineMatches()
+defineTrades()
+
+
+---Self-consolidate logic tree on whatever is left
+local consolidate = {}
+for toon, items in pairs(allitems) do
+    for item, stuff in pairs(items) do
+
+        --If destination is empty, no trades were found and it needs to be self-consolidated
+        if stuff.destination == "" then
+            if stuff.locations <= 1 then
+                if utils.listSize(stuff.inventory) == 0 then
+                    --Already consolidated
+                else
+                    stuff.destination = 'Leftovers'
+                end
+            else
+                if stuff.depot > 0 then
+                    stuff.destination = 'Depot'
+                else
+                    if utils.listSize(stuff.bank) > 0 and utils.listSize(stuff.plots) > 0 then
+                        if settings.preferPlots == true then
+                            stuff.destination = 'Plots'
+                        else
+                            stuff.destination = 'Bank'
+                        end
+                    elseif utils.listSize(stuff.plots) > 0 then
+                        stuff.destination = 'Plots'
+                    elseif utils.listSize(stuff.bank) > 0 then
+                        stuff.destination = 'Bank'
+                    else
+                        stuff.destination = 'Leftovers'
+                    end
+                end
+            end
+            --Anything blank is already consolidated
+            if stuff.destination ~= '' then
+                if not consolidate[toon] then
+                    consolidate[toon] = {}
+                end
+                consolidate[toon][item] = stuff.destination
+            end
+        end
+    end
+end
+mq.pickle(matchesPath, matches)
+mq.pickle(consolPath, consolidate)
+
+
+
+--Decombine allitems back into individual files
+for toon, items in pairs(allitems) do
+    local path = 'TSC/tmp/allitems_'..toon..'.lua'
+    mq.pickle(path, items)
+end
+
+
+print('\at[TsC]\ao Done identifying trades. Compared \ag'..lqtable..' \aounique items among \ag'..ltoons..' \aotoons and found \ag'..matchCount..' \aoitems that need to change hands.')
+mq.cmd('/tsc donematching')
