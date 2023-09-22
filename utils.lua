@@ -230,6 +230,13 @@ function utils.grab(grabList, mode, what)
     utils.banker()
     utils.loadFindWindow(2, what) --2 is bank/depot only
 
+    if mode == 3 then
+        if mq.TLO.Window('FindItemWnd').Child('FIW_SearchDepotButton').Checked() then
+            mq.cmd('/notify FindItemWnd FIW_SearchDepotButton leftmouseup')
+            mq.delay(300)
+        end
+    end
+
     while not mq.TLO.Window('TradeskillDepotWnd').Open() do
         mq.cmd('/notify BigBankWnd BIGB_TradeskillDepot leftmouseup')
         mq.delay(100)
@@ -607,7 +614,7 @@ end
 function utils.bankToDepot(bankToDepotList)
     utils.cleanup()
     print('\at[TsC]\ao Moving items from the bank to your depot.')
-    utils.grab(bankToDepotList, 1, 41)
+    utils.grab(bankToDepotList, 3, 41)
 
     local move = utils.depot(bankToDepotList, false)
     utils.cleanup()
