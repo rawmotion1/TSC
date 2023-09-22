@@ -234,6 +234,8 @@ function utils.grab(grabList, mode, what)
         if mq.TLO.Window('FindItemWnd').Child('FIW_SearchDepotButton').Checked() then
             mq.cmd('/notify FindItemWnd FIW_SearchDepotButton leftmouseup')
             mq.delay(300)
+            mq.cmd('/notify FindItemWnd FIW_QueryButton leftmouseup')
+            mq.delay(3500)
         end
     end
 
