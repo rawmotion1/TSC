@@ -284,6 +284,19 @@ local function defineTrades()
 end
 defineTrades()
 
+--If in more than one plot location, find winner
+local function findHighestValueKey(tbl)
+    local highestKey = nil
+    local highestValue = -math.huge
+    
+    for key, value in pairs(tbl) do
+        if value > highestValue then
+            highestKey = key
+            highestValue = value
+        end
+    end
+    return highestKey
+end
 
 ---Self-consolidate logic tree on whatever is left
 local consolidate = {}
@@ -304,14 +317,27 @@ for toon, items in pairs(allitems) do
                 else
                     if utils.listSize(stuff.bank) > 0 and utils.listSize(stuff.plots) > 0 then
                         if settings.preferPlots == true then
-                            stuff.destination = 'Plots'
+                            stuff.destination = findHighestValueKey(stuff.plots)
                         else
                             stuff.destination = 'Bank'
                         end
                     elseif utils.listSize(stuff.plots) > 0 then
-                        stuff.destination = 'Plots'
+                        stuff.destination = findHighestValueKey(stuff.plots)
                     elseif utils.listSize(stuff.bank) > 0 then
-                        stuff.destination = 'Bank'
+                        if utils.listSize(stuff.inventory) > 0 then
+                            stuff.destination = 'Bank'
+                        else
+                            local max = mq.TLO.FindItemBank('='..item).StackSize()
+                            local x = 0
+                            for _,qty in pairs(stuff['bank']) do
+                                if qty < max then
+                                    x = x + 1
+                                end
+                            end
+                            if x > 1 then
+                                stuff.destination = 'BankRestack'
+                            end
+                        end
                     else
                         stuff.destination = 'Leftovers'
                     end

@@ -16,6 +16,7 @@ local toonPath = 'TSC/toons.lua'
 local ignorePath = 'TSC/ignore.lua'
 local artisanPath = 'TSC/artisan.lua'
 local matchesPath = 'TSC/tmp/matches.lua'
+local consolPath = 'TSC/tmp/consolidate.lua'
 local movePath = 'TSC/tmp/movetable.lua'
 
 local settings = {}
@@ -27,6 +28,7 @@ local pignoreList = {}
 local artisan = {}
 local moveTable = {}
 local matches = {}
+local consol = {}
 
 --------Create missing files--------
 local function createFiles(file)
@@ -282,7 +284,7 @@ local function whileWaiting()
     checkToons()
     checkMules()
     getPeers()
-    mq.delay(100)
+    mq.delay(500)
 end
 
 
@@ -412,6 +414,10 @@ end
 
 --------Find matches, determine trades, identify traders--------
 local traders
+local bankers
+local movers --Depot and bank to depot
+local dumpers
+local ploters
 local waitingMatches
 local function stopWaitingMatching() waitingMatches = false end
 local function match()
@@ -432,11 +438,19 @@ local function match()
         matches = matchlist()
     end
 
+    local consollist, consolError = loadfile(mq.configDir..'/'..consolPath)
+    if consolError then
+        print('\at[TsC]\ao Error loading consolidate.lua')
+    elseif consollist then
+        consol = consollist()
+    end
+
     traders = {}
     for k,_ in pairs(matches) do
         local entry = {['name'] = k}
         table.insert(traders, entry)
     end
+
     openMatch = true
     status = 'Awaiting user input'
 end
@@ -487,18 +501,20 @@ local function trade(who)
     if length > 0 then
 
         for _,toon in pairs(who) do
-            waitingTrading = true
+            if matches[toon.name] then
+                waitingTrading = true
 
-            if toon.name == me then
-                mq.cmd('/squelch /lua run TSC/trade')
-            else
-                mq.cmdf('/squelch /dex %s /lua run TSC/trade', toon.name)
-            end
+                if toon.name == me then
+                    mq.cmd('/squelch /lua run TSC/trade')
+                else
+                    mq.cmdf('/squelch /dex %s /lua run TSC/trade', toon.name)
+                end
 
-            print('\at[TsC]\ao Telling \ar'..toon.name..' \ao to start trading routine.')
+                print('\at[TsC]\ao Telling \ar'..toon.name..' \ao to start trading routine.')
 
-            while waitingTrading do
-                whileWaiting()
+                while waitingTrading do
+                    whileWaiting()
+                end
             end
         end
 
@@ -508,7 +524,7 @@ local function trade(who)
 end
 
 
---------Create move table for banking/depot--------
+--[[Create move table for banking/depot
 local bankers
 local movers --Depot and bank to depot
 local dumpers
@@ -626,6 +642,37 @@ local function createMoveList(who)
     mq.pickle(mq.configDir..'/'..movePath, moveTable)
     openMove = true
     status = 'Awaiting user input'
+end--]]
+
+--------Real estate routine--------
+local realCount
+local function stopwaitingPlots() realCount = realCount + 1 end
+local function realEstate(who, what)
+    status = 'Real estate'
+
+    print('\at[TsC]\ao------\agStart\ao real estate routine.')
+
+    if what == nil then what = 41 end
+
+    local length = utils.listSize(who)
+
+    for _,toon in pairs(who) do
+        if toon.name == me then
+            mq.cmdf('/squelch /lua run TSC/plots.lua %s', what)
+        else
+            mq.cmdf('/squelch /dex %s /lua run TSC/plots %s', toon.name, what)
+        end
+    end
+
+    realCount = 0
+    while realCount < length do
+        mq.doevents()
+        whileWaiting()
+    end
+    realCount = 0
+
+    print('\at[TsC]\ao------\arDone\ao real estate routine.')
+    mq.delay(2000)
 end
 
 
@@ -846,41 +893,48 @@ local function go(what)
     createStats(toons)
 
     if what == 'Collectibles' then scan(toons,1,19) else scan(toons) end
+
     match()
 
-    --Wait for trade confirmation
+    --Wait for confirmation
     continue = false
     while continue == false do
-        mq.delay(1000)
+        whileWaiting()
     end
 
     if skipTrading == false then
         if what == 'Collectibles' then grab(toons, 19) else grab(toons) end
 
-        trade(traders)
+        trade(toons)
 
+        if settings.includePlots == true then
+            if what == 'Collectibles' then realEstate(toons, 19) else realEstate(toons) end
+        end
+
+        bank(toons)
+
+        depot(toons)
         --if what == 'Collectibles' then scan(traders,1,1,19) else scan(traders) end
     else
-        print('\at[TsC]\ay Skipping trade consolidation.')
+        print('\at[TsC]\ay Skipping consolidation.')
     end
 
-    createMoveList(toons)
+    
+    --createMoveList(toons)
 
     --Wait for bank confirmation
-    continue = false
-    while continue == false do
+    --continue = false
+    --while continue == false do
         mq.delay(1000)
-    end
+    --end
 
-    if skipMoving == false then
-        bank(bankers)
+    --if skipMoving == false then
+        
+    --else
+        --print('\at[TsC]\ay Skipping bank and depot consolidation.')
+    --end
 
-        depot(movers)
-    else
-        print('\at[TsC]\ay Skipping bank and depot consolidation.')
-    end
-
-    rest(dumpers)
+    rest(toons)
 
     if settings.stats == true then calcStats(toons, what) end
 
@@ -1014,6 +1068,8 @@ local function binds(a, b)
         stopWaitingGrabbing()
     elseif a == 'donetrading' then
         stopWaitingTrading()
+    elseif a == 'doneplots' then
+        stopwaitingPlots()
     elseif a == 'donebanking' then
         stopwaitingBanking()
     elseif a == 'donedepot' then
@@ -1656,68 +1712,156 @@ local function matchWindow()
             ImGui.PopStyleColor()
 
             --Start match tables
-            for toon,_ in pairs(matches) do
-                ImGui.TextColored(1,0,0,1, fname(toon))
-                if ImGui.BeginTable('##'..toon, 4, 0) then
-                    ImGui.TableSetupColumn('Action', ImGuiTableColumnFlags.WidthStretch)
+            for _,toon in pairs(toons) do
+                ImGui.TextColored(1,0,0,1, fname(toon.name))
+                if ImGui.BeginTable('##'..toon.name, 4, 0) then
+                    ImGui.TableSetupColumn('Trades', ImGuiTableColumnFlags.WidthStretch)
                     ImGui.TableSetupColumn('Skip', ImGuiTableColumnFlags.WidthFixed, 80)
                     ImGui.TableSetupColumn('Global', ImGuiTableColumnFlags.WidthFixed, 90)
                     ImGui.TableSetupColumn('Personal', ImGuiTableColumnFlags.WidthFixed, 90)
                     ImGui.TableHeadersRow()
 
-                    for item,recipient in pairs(matches[toon]) do
+                    if matches[toon.name] then
+                        
+                        --Alphabetize
+                        local sortedKeys = {}
+                        for item,_ in pairs(matches[toon.name]) do
+                            table.insert(sortedKeys, item)
+                        end
+                        table.sort(sortedKeys)
 
-                        local function update(arg)
-                            if recipient ~= 'skipped' and recipient ~= 'ignored' and recipient ~= 'pignored'  then
-                                if arg == 'skip' then
-                                    matches[toon][item] = 'skipped'
-                                elseif arg == 'ignore' then
-                                    ignoreMatch(item, 'global')
-                                    matches[toon][item] = 'ignored'
-                                elseif arg == 'pignore' then
-                                    ignoreMatch(item, toon)
-                                    matches[toon][item] = 'pignored'
+                        for _,item in pairs(sortedKeys) do
+
+                            local function update(arg)
+                                if matches[toon.name][item] ~= 'skipped' and matches[toon.name][item] ~= 'ignored' and matches[toon.name][item] ~= 'pignored'  then
+                                    if arg == 'skip' then
+                                        matches[toon.name][item] = 'skipped'
+                                    elseif arg == 'ignore' then
+                                        ignoreMatch(item, 'global')
+                                        matches[toon.name][item] = 'ignored'
+                                    elseif arg == 'pignore' then
+                                        ignoreMatch(item, toon.name)
+                                        matches[toon.name][item] = 'pignored'
+                                    end
+                                    save()
                                 end
-                                save()
+                            end
+
+                            ImGui.TableNextRow()
+                            ImGui.TableNextColumn()
+
+                            if matches[toon.name][item] == 'ignored' then
+                                ImGui.TextDisabled(item..' is now globally ignored')
+                            elseif matches[toon.name][item] == 'pignored' then
+                                ImGui.TextDisabled(item..' is now personally ignored')
+                            elseif matches[toon.name][item] == 'skipped' then
+                                ImGui.TextDisabled(item..' will be skipped once')
+                            else
+                                ImGui.Text(item..' will go to '..fname(matches[toon.name][item]))
+                            end
+
+                            ImGui.TableNextColumn()
+                            if ImGui.Button('\xef\x81\x9e Skip##'..toon.name..item) then
+                                update('skip')
+                            end
+                            if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip trading this item once.') end
+
+                            ImGui.TableNextColumn()
+
+                            ImGui.PushStyleColor(ImGuiCol.Button,1,1,0,.5)
+                                if ImGui.Button('\xef\x82\xac Ignore##'..toon.name..item) then
+                                    update('ignore')
+                                end
+                            ImGui.PopStyleColor()
+                            if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to your global ingore file.') end
+
+                            ImGui.TableNextColumn()
+
+                            ImGui.PushStyleColor(ImGuiCol.Button, 0,1,1,.4)
+                                if ImGui.Button('\xef\x80\x87 Ignore##'..toon.name..item) then
+                                    update('pignore')
+                                end
+                            ImGui.PopStyleColor()
+                            if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to this toon\'s personal ingore file.') end
+                        end
+                    end
+                ImGui.EndTable()
+                ImGui.Separator()
+                end
+
+                if ImGui.BeginTable('###'..toon.name, 4, 0) then
+                    ImGui.TableSetupColumn('Moves', ImGuiTableColumnFlags.WidthStretch)
+                    ImGui.TableSetupColumn('Skip', ImGuiTableColumnFlags.WidthFixed, 80)
+                    ImGui.TableSetupColumn('Global', ImGuiTableColumnFlags.WidthFixed, 90)
+                    ImGui.TableSetupColumn('Personal', ImGuiTableColumnFlags.WidthFixed, 90)
+                    ImGui.TableHeadersRow()
+
+                    if consol[toon.name] then
+
+                        --Alphabetize
+                        local sortedKeys = {}
+                        for item,_ in pairs(consol[toon.name]) do
+                            table.insert(sortedKeys, item)
+                        end
+                        table.sort(sortedKeys)
+
+                        for _,item in pairs(sortedKeys) do
+                            if consol[toon.name][item] ~= "Leftovers" then
+                                local function update(arg)
+                                    if consol[toon.name][item] ~= 'skipped' and consol[toon.name][item] ~= 'ignored' and consol[toon.name][item] ~= 'pignored'  then
+                                        if arg == 'skip' then
+                                            consol[toon.name][item] = 'skipped'
+                                        elseif arg == 'ignore' then
+                                            ignoreMatch(item, 'global')
+                                            consol[toon.name][item] = 'ignored'
+                                        elseif arg == 'pignore' then
+                                            ignoreMatch(item, toon.name)
+                                            consol[toon.name][item] = 'pignored'
+                                        end
+                                        save()
+                                    end
+                                end
+
+                                ImGui.TableNextRow()
+                                ImGui.TableNextColumn()
+
+                                if consol[toon.name][item] == 'ignored' then
+                                    ImGui.TextDisabled(item..' is now globally ignored')
+                                elseif consol[toon.name][item] == 'pignored' then
+                                    ImGui.TextDisabled(item..' is now personally ignored')
+                                elseif consol[toon.name][item] == 'skipped' then
+                                    ImGui.TextDisabled(item..' will be skipped once')
+                                elseif consol[toon.name][item] == 'BankRestack' then
+                                    ImGui.Text(item..' will be restacked in the bank')
+                                elseif consol[toon.name][item] ~= 'Leftovers' then
+                                    ImGui.Text(item..' will go to '..fname(consol[toon.name][item]))
+                                end
+
+                                ImGui.TableNextColumn()
+                                if ImGui.Button('\xef\x81\x9e Skip##'..toon.name..item) then
+                                    update('skip')
+                                end
+                                if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip this item once.') end
+
+                                ImGui.TableNextColumn()
+
+                                ImGui.PushStyleColor(ImGuiCol.Button,1,1,0,.5)
+                                    if ImGui.Button('\xef\x82\xac Ignore##'..toon.name..item) then
+                                        update('ignore')
+                                    end
+                                ImGui.PopStyleColor()
+                                if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to your global ingore file.') end
+
+                                ImGui.TableNextColumn()
+
+                                ImGui.PushStyleColor(ImGuiCol.Button, 0,1,1,.4)
+                                    if ImGui.Button('\xef\x80\x87 Ignore##'..toon.name..item) then
+                                        update('pignore')
+                                    end
+                                ImGui.PopStyleColor()
+                                if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to this toon\'s personal ingore file.') end
                             end
                         end
-
-                        ImGui.TableNextRow()
-                        ImGui.TableNextColumn()
-
-                        if recipient == 'ignored' then
-                            ImGui.TextDisabled(item..' is now globally ignored')
-                        elseif recipient == 'pignored' then
-                            ImGui.TextDisabled(item..' is now personally ignored')
-                        elseif recipient == 'skipped' then
-                            ImGui.TextDisabled(item..' will be skipped once')
-                        else
-                            ImGui.Text(item..' will go to '..fname(recipient))
-                        end
-
-                        ImGui.TableNextColumn()
-                        if ImGui.Button('\xef\x81\x9e Skip##'..toon..item) then
-                            update('skip')
-                        end
-                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Skip trading this item once.') end
-
-                        ImGui.TableNextColumn()
-
-                        ImGui.PushStyleColor(ImGuiCol.Button,1,1,0,.5)
-                            if ImGui.Button('\xef\x82\xac Ignore##'..toon..item) then
-                                update('ignore')
-                            end
-                        ImGui.PopStyleColor()
-                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to your global ingore file.') end
-
-                        ImGui.TableNextColumn()
-
-                        ImGui.PushStyleColor(ImGuiCol.Button, 0,1,1,.4)
-                            if ImGui.Button('\xef\x80\x87 Ignore##'..toon..item) then
-                                update('pignore')
-                            end
-                        ImGui.PopStyleColor()
-                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Add this item to this toon\'s personal ingore file.') end
                     end
                 ImGui.EndTable()
                 ImGui.Separator()

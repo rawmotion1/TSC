@@ -1,14 +1,16 @@
 --- @type Mq
 local mq = require('mq')
 local utils = require('utils')
-local home = require('plot')
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
-local movePath = 'TSC/tmp/movetable.lua'
+local consolPath = 'TSC/tmp/consolidate.lua'
+local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
 
 local settings = {}
-local moveTable = {}
+local consol = {}
+local items = {}
+
 
 local function loadfiles()
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
@@ -18,46 +20,43 @@ local function loadfiles()
         settings = loadSettings()
     end
 
-    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
-    if moveerror then
-        print('Error loading movetable.lua')
+    local consollist, consolError = loadfile(mq.configDir..'/'..consolPath)
+    if consolError then
+        print('\at[TsC]\ao Error loading consolidate.lua')
+    elseif consollist then
+        consol = consollist()
+    end
+
+    local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
+    if itemerror then
+        print('\at[TsC]\ao Error loading allitems_'..me..'.lua')
         mq.exit()
-    elseif movefile then
-        moveTable = movefile()
+    elseif allitems then
+        items = allitems()
     end
 end
 loadfiles()
 
 print('\at[TsC]\ao Looking for items to move to bank...')
+
+local bankList = {}
+local restackList = {}
+if consol[me] then
+    for item,dest in pairs(consol[me]) do
+        if dest == 'Bank' or dest == "BankRestack" then
+            table.insert(bankList, item)
+        end
+        if dest == 'BankRestack' then
+            table.insert(restackList, item)
+        end
+    end
+end
 mq.delay(1000)
 
-local bankList = moveTable[me]['tobank']
-
 local count = 0
-
-count = count + utils.bank(bankList)
-
-if settings.preferPlots == true then
-    print('\at[TsC]\ao Looking for items to move to plot...')
-    mq.delay(1000)
-    local plotList = moveTable[me]['toplot']
-    if utils.listSize(plotList) > 0 then
-        local currentPlot
-        
-        for plots, items in pairs(moveTable[me]['toplot']) do
-            local neigh, plot, room = string.match(plots, "([^,]+),%s*([^,]+),%s*([^,]+)")
-            local uniquePlot = neigh..", "..plot
-            if currentPlot ~= uniquePlot then
-                currentPlot = uniquePlot
-                print('\at[TsC]\ao Heading to \ay'..plots..'\ao.')
-                home.go(neigh, plots)
-                utils.cleanup()
-                mq.delay(1000)
-            end
-            --utils.putInPlot(items, room)
-        end
-
-    end
+if utils.listSize(bankList) > 0 or utils.listSize(restackList) > 0 then
+    utils.grab(restackList)
+    count = count + utils.bank(bankList)
 end
 
 if count > 0 then

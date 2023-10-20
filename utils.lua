@@ -14,6 +14,7 @@ function utils.stopAll(restart)
     mq.cmd('/dgae /squelch /lua stop TSC/depot.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/leftover.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/give.lua')
+    mq.cmd('/dgae /squelch /lua stop TSC/plots.lua')
     if restart == true then
         mq.cmd('/lua run TSC/restart')
     end
@@ -62,12 +63,14 @@ function utils.listSize(who)
     return count
 end
 
-function utils.loadFindWindow(what) --what: 41 is ts mats 19 is collectibles
+function utils.loadFindWindow(what, scope) --what: 41 is ts mats 19 is collectibles
+    if what == nil then what = 1 end
+    if scope == nil then scope = 1 end
     mq.cmd('/invoke ${Window[FindItemWnd].DoOpen}')
     mq.delay(300)
     mq.cmd('/notify FindItemWnd FIW_Default leftmouseup')
     mq.delay(300)
-    mq.cmd('/notify FindItemWnd FIW_ItemLocationCombobox listselect 1')
+    mq.cmdf('/notify FindItemWnd FIW_ItemLocationCombobox listselect %s', scope)
     mq.delay(300)
     mq.cmdf('/notify FindItemWnd FIW_ItemTypeCombobox listselect %s', what)
     mq.delay(300)
@@ -120,7 +123,7 @@ function utils.navTarget(name, bank)
         mq.cmdf('/squelch /nav spawn %s', target)
     end
     mq.delay(100)
-    while mq.TLO.Spawn(target).Distance() > 20 do
+    while mq.TLO.Navigation.Active() do
         if mq.TLO.Spawn(target).Distance() <= 20 then
             mq.cmd('/squelch /nav stop')
             break
@@ -159,86 +162,10 @@ function utils.banker()
     end
 end
 
---where: 1=all 2=bank 4=inventory, ignore: ignorelist, items: results to be returned, what: mats or collectibles, realestate: include real estate
-function utils.scan(where, ignore, items, what, realestate)
-    utils.cleanup()
-    utils.loadFindWindow(what)
-
-    local listSize = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').Items()
-
-    local countSlots = 0
-    local countItems = 0
-
-    for i=1, listSize do
-        local name = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,2)()
-        local qty = tonumber(mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,3)())
-        local location = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,4)()
-
-        local real
-        local skip = false
-        for _,v in pairs(ignore) do
-            if v == name then skip = true real = false end
-        end
-
-        local item
-        if string.match(location, "General") then item = mq.TLO.FindItem('='..name)
-        elseif string.match(location, "Bank") then item = mq.TLO.FindItemBank('='..name)
-        elseif string.match(location, "Personal") then item = mq.TLO.TradeskillDepot.FindItem('='..name)
-            --this is a good place to enable/disable real estate
-        elseif string.match(location, ",") and skip == false and realestate == true then real = true skip = true --Item is in real estate so we can't get info on it
-        else skip = true
-        end
-
-        if skip == false then
-            if item.NoDrop() or item.Container() ~= 0 or not item.Stackable() or item.Lore() then
-                skip = true
-            end
-        end
-
-        if skip == false then
-            local inv = mq.TLO.FindItemCount('='..name)() or 0
-            local bnk = mq.TLO.FindItemBankCount('='..name)() or 0
-            local dpt = mq.TLO.TradeskillDepot.FindItemCount('='..name)() or 0
-            local total = inv + bnk + dpt
-            if not items[name] then
-                items[name] = {}
-                items[name].totalQty = qty
-                items[name]['locations'] = {}
-                table.insert(items[name]['locations'], location)
-                countSlots = countSlots + 1
-                countItems = countItems + 1
-            else
-                table.insert(items[name]['locations'], location)
-                items[name].totalQty = items[name].totalQty + qty
-                countSlots = countSlots + 1
-            end
-            print('\at[TsC]\ao Found \ay'..name)
-        elseif real == true then
-            
-            if not items[name] then
-                items[name] = {}
-                items[name].totalQty = qty
-                items[name]['locations'] = {}
-                table.insert(items[name]['locations'], location)
-                countSlots = countSlots + 1
-                countItems = countItems + 1
-            else
-                table.insert(items[name]['locations'], location)
-                items[name].totalQty = items[name].totalQty + qty
-                countSlots = countSlots + 1
-            end
-            print('\at[TsC]\ao Found \ay'..name)
-        else
-            print('\at[TsC]\ar Skipping \ay'..name)
-        end
-    end
-    utils.cleanup()
-    return countSlots, countItems
-end
 
 function utils.scantwo(items, ignore, what, realestate)
     utils.cleanup()
-    utils.loadFindWindow(what)
+    utils.loadFindWindow(what, 1)
 
     local listSize = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').Items()
 
@@ -325,6 +252,7 @@ function utils.scantwo(items, ignore, what, realestate)
         else
             print('\at[TsC]\ar Skipping \ay'..name)
         end
+        mq.delay(1)
     end
     utils.cleanup()
     return countSlots, countItems
@@ -410,7 +338,7 @@ end
 function utils.grab(grabList, what, mode)
     utils.cleanup()
     utils.banker()
-    utils.loadFindWindow(what)
+    utils.loadFindWindow(what, 2)
 
     while not mq.TLO.Window('TradeskillDepotWnd').Open() do
         mq.cmd('/notify BigBankWnd BIGB_TradeskillDepot leftmouseup')
@@ -482,7 +410,7 @@ function utils.findTableDifference(table1, table2)
 end
 
 
-function utils.grabReal(realList)
+function utils.grabReal(list)
 
     while not mq.TLO.Window('RealEstateItemsWnd').Open() do
         mq.TLO.Window('RealEstateItemsWnd').DoOpen()
@@ -497,7 +425,7 @@ function utils.grabReal(realList)
         local row = mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List(i,2)()
         local loc = mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List(i,5)()
         mq.cmdf('/notify RealEstateItemsWnd REIW_ItemList listselect %s', i)
-        for k,v in pairs(realList) do
+        for k,v in pairs(list) do
             if row == v then
                 if mq.TLO.Me.FreeInventory() > 0 then
                     print('\at[TsC]\ao Found \ay'..v..'\ao in row '..i)
@@ -557,7 +485,6 @@ function utils.grabReal(realList)
 
                     if mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List('='..v,2)() == nil then
                         count = count + 1
-                        realList[k] = nil
                     end
 
                 else
@@ -722,37 +649,51 @@ function utils.bank(bankList)
     return count, bankList
 end
 
-function utils.putReal(realList, room)
+function utils.putReal(list)
+    utils.cleanup()
     while not mq.TLO.Window('RealEstateItemsWnd').Open() do
         mq.TLO.Window('RealEstateItemsWnd').DoOpen()
         mq.delay(100)
     end
+    mq.cmd('/keypress OPEN_INV_BAGS')
 
     local count = 0
 
-    for _,item in pairs(realList) do
+    for item,room in pairs(list) do
         if mq.TLO.FindItemCount('='..item)() > 0 then
-            print('\at[TsC]\ao Putting \ay'..item..' \aoin your plot.')
+            print('\at[TsC]\ao Putting \ay'..item..' \aoin your '..room..'.')
+            local full = false
             repeat
 
-                mq.cmdf('/itemnotify %s leftmouseup', item)
-                mq.delay(300)
-
-                if string.match(room,'Crate') then
-                    mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Crate_Button leftmouseup')
+                mq.cmdf('/itemnotify "%s" leftmouseup', item)
+                mq.delay(500)
+                
+                if room == 'Crate' then
+                    if mq.TLO.Window('RealEstateItemsWnd').Child('REIW_Move_Crate_Button').Enabled() == true then
+                        mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Crate_Button leftmouseup')
+                    else
+                        print('\at[TsC]\ao Uh oh, it appears your\ar '..room..' \ao is full!')
+                        full = true
+                    end
                 else
                     if mq.TLO.Window('RealEstateItemsWnd').Child('REIW_Move_Closet_Button').Enabled() == true then
                         mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Closet_Button leftmouseup')
                     else
-                        --full
+                        print('\at[TsC]\ao Uh oh, it appears your\ar '..room..' \ao is full!')
+                        full = true
                     end
                 end
                 mq.delay(300)
 
-            until mq.TLO.FindItemCount('='..item)() == 0
-            count = count + 1
+            until mq.TLO.FindItemCount('='..item)() == 0 or full == true
+            if full == false then
+                count = count + 1
+            end
         end
+        mq.delay(100)
     end
+    utils.cleanup()
+    return count
 end
 
 utils.resume = true

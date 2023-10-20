@@ -1,9 +1,9 @@
 ---@type Mq
 local mq = require('mq')
 
-local plots = {}
+local home = {}
 
-function plots.go(neigh, plot)
+function home.go(neigh, plot)
 
     if mq.TLO.Zone.ShortName() ~= 'guildlobby' and mq.TLO.Zone.ShortName() ~= 'neighborhood' then
         mq.cmd('/travelto guildlobby')
@@ -152,4 +152,4 @@ function plots.go(neigh, plot)
     end
 end
 
-return plots
+return home
