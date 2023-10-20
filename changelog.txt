@@ -1,3 +1,6 @@
+v1.0.17 - 20.10.2023
+- Fix for issue with toons and pets having the same name
+
 v1.0.16 - 22.09.2023
 - Fix for moving items from bank to depot without overloading inventory
 

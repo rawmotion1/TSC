@@ -45,34 +45,32 @@ function utils.pickup(item, loc)
     end
 end
 
-function utils.navTarget(name, bank)
+function utils.navTarget(name)
     utils.cleanup()
     local target
-    if bank == true then
-        target = mq.TLO.NearestSpawn(name)()
-    else
-        target = mq.TLO.NearestSpawn('"='..name..'"')()
-    end
+
+    target = mq.TLO.Spawn('PC ='..name)()
+
     if target == nil then
         print('\at[TsC]\ao Target not found in zone. Stopping.')
         return
     end
-    if mq.TLO.Spawn(target).Distance() > 20 then
-        mq.cmdf('/squelch /nav spawn %s', target)
+
+    if mq.TLO.Spawn('PC ='..name).Distance() > 20 then
+        mq.cmdf('/squelch /nav spawn PC =%s', name)
     end
+
     mq.delay(100)
-    while mq.TLO.Spawn(target).Distance() > 20 do
-        if mq.TLO.Spawn(target).Distance() <= 20 then
+
+    while mq.TLO.Spawn('PC ='..name).Distance() > 20 do
+        if mq.TLO.Spawn('PC ='..name).Distance() <= 20 then
             mq.cmd('/squelch /nav stop')
             break
         end
     end
+
     while mq.TLO.Target.Name() ~= target do
-        if bank == true then
-            mq.cmdf('/target %s', target)
-        else
-            mq.cmdf('/target "=%s"', target)
-        end
+        mq.cmdf('/target PC =%s', name)
         mq.delay(100)
     end
 end
@@ -87,7 +85,23 @@ function utils.banker()
         end
     end
 
-    utils.navTarget(banker, true)
+    if mq.TLO.Spawn(banker).Distance() > 20 then
+        mq.cmdf('/squelch /nav spawn %s', banker)
+    end
+
+    mq.delay(100)
+
+    while mq.TLO.Spawn(banker).Distance() > 20 do
+        if mq.TLO.Spawn(banker).Distance() <= 20 then
+            mq.cmd('/squelch /nav stop')
+            break
+        end
+    end
+
+    while mq.TLO.Target.Name() ~= banker do
+        mq.cmdf('/target %s', banker)
+        mq.delay(100)
+    end
 
     while not mq.TLO.Window('BigBankWnd').Open() do
         mq.cmd('/usetarget')
