@@ -43,15 +43,24 @@ local bankList = {}
 local restackList = {}
 if consol[me] then
     for item,dest in pairs(consol[me]) do
-        if dest == 'Bank' or dest == "BankRestack" then
+        if dest == 'Bank' then
             table.insert(bankList, item)
         end
         if dest == 'BankRestack' then
-            table.insert(restackList, item)
+            local max = mq.TLO.FindItemBank('='..item).StackSize() or 0
+            local x = 0
+            for _,qty in pairs(items[item]['bank']) do
+                if qty < max then x = x + 1 end
+            end
+            if x > 1 then
+                table.insert(restackList, item)
+                table.insert(bankList, item)
+            end
         end
     end
 end
 mq.delay(1000)
+
 
 local count = 0
 if utils.listSize(bankList) > 0 or utils.listSize(restackList) > 0 then

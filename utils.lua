@@ -107,34 +107,32 @@ function utils.pickup(item, loc)
     end
 end
 
-function utils.navTarget(name, bank)
+function utils.navTarget(name)
     utils.cleanup()
     local target
-    if bank == true then
-        target = mq.TLO.NearestSpawn(name)()
-    else
-        target = mq.TLO.NearestSpawn('"='..name..'"')()
-    end
+
+    target = mq.TLO.Spawn('PC ='..name)()
+
     if target == nil then
         print('\at[TsC]\ao Target not found in zone. Stopping.')
         return
     end
-    if mq.TLO.Spawn(target).Distance() > 20 then
-        mq.cmdf('/squelch /nav spawn %s', target)
+
+    if mq.TLO.Spawn('PC ='..name).Distance() > 20 then
+        mq.cmdf('/squelch /nav spawn PC =%s', name)
     end
+
     mq.delay(100)
+
     while mq.TLO.Navigation.Active() do
-        if mq.TLO.Spawn(target).Distance() <= 20 then
+        if mq.TLO.Spawn('PC ='..name).Distance() <= 20 then
             mq.cmd('/squelch /nav stop')
             break
         end
     end
+
     while mq.TLO.Target.Name() ~= target do
-        if bank == true then
-            mq.cmdf('/target %s', target)
-        else
-            mq.cmdf('/target "=%s"', target)
-        end
+        mq.cmdf('/target PC =%s', name)
         mq.delay(100)
     end
 end
@@ -149,7 +147,23 @@ function utils.banker()
         end
     end
 
-    utils.navTarget(banker, true)
+    if mq.TLO.Spawn(banker).Distance() > 20 then
+        mq.cmdf('/squelch /nav spawn %s', banker)
+    end
+
+    mq.delay(100)
+
+    while mq.TLO.Navigation.Active() do
+        if mq.TLO.Spawn(banker).Distance() <= 20 then
+            mq.cmd('/squelch /nav stop')
+            break
+        end
+    end
+
+    while mq.TLO.Target.Name() ~= banker do
+        mq.cmdf('/target %s', banker)
+        mq.delay(100)
+    end
 
     while not mq.TLO.Window('BigBankWnd').Open() do
         mq.cmd('/usetarget')
@@ -158,13 +172,14 @@ function utils.banker()
 
     while not mq.TLO.Window('TradeskillDepotWnd').Open() do
         mq.cmd('/notify BigBankWnd BIGB_TradeskillDepot leftmouseup')
-        mq.delay(100)
+        mq.delay(5000)
     end
 end
 
 
-function utils.scantwo(items, ignore, what, realestate)
+function utils.scan(items, ignore, what, realestate)
     utils.cleanup()
+    utils.banker()
     utils.loadFindWindow(what, 1)
 
     local listSize = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').Items()
@@ -232,6 +247,7 @@ function utils.scantwo(items, ignore, what, realestate)
                 countSlots = countSlots + 1
                 countItems = countItems + 1
             else --Already exists
+                local add = true
                 if string.match(location, "General") then
                     items[name]['inventory'][location] = qty
                 elseif string.match(location, "Bank") then
@@ -240,13 +256,16 @@ function utils.scantwo(items, ignore, what, realestate)
                      if items[name]['plots'][location] then --Another stack in existing plot location
                         items[name]['plots'][location] = items[name]['plots'][location] + qty
                         items[name]['total'] = items[name]['total'] + qty
+                        add = false
                      else --New plot location
                         items[name]['plots'][location] = qty
                         items[name]['total'] = items[name]['total'] + qty
                      end
                 end
                 countSlots = countSlots + 1
-                items[name]['locations'] = items[name]['locations'] + 1
+                if add == true then
+                    items[name]['locations'] = items[name]['locations'] + 1
+                end
             end
             print('\at[TsC]\ao Found \ay'..name)
         else
@@ -346,9 +365,11 @@ function utils.grab(grabList, what, mode)
     end
 
     if mode == 3 then
-        if not mq.TLO.Window('FindItemWnd').Child('FIW_SearchDepotButton').Checked() then
+        if mq.TLO.Window('FindItemWnd').Child('FIW_SearchDepotButton').Checked() then
             mq.cmd('/notify FindItemWnd FIW_SearchDepotButton leftmouseup')
             mq.delay(300)
+            mq.cmd('/notify FindItemWnd FIW_QueryButton leftmouseup')
+            mq.delay(3500)
         end
     end
 
@@ -387,18 +408,20 @@ function utils.grab(grabList, what, mode)
 
                     if mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List('='..v,2)() == nil then
                         count = count + 1
-                        grabList[k] = nil
+                        if mode ~= 3 then
+                            grabList[k] = nil
+                        end
                     end
 
                 else
                     print('\at[TsC]\ao Found \ay'..v..'\ao in row '..i..'\ay but my inventory is full!')
-                    return count
+                    return count, grabList
                 end
             end
         end
     end
     utils.cleanup()
-    return count
+    return count, grabList
 end
 
 function utils.findTableDifference(table1, table2)
@@ -500,7 +523,7 @@ end
 
 
 
-function utils.tradeNewest(receiver, list)
+function utils.trade(receiver, list)
     mq.cmdf('/dobserve %s -q Me.FreeInventory', receiver)
     utils.cleanup()
     utils.navTarget(receiver)
@@ -509,8 +532,6 @@ function utils.tradeNewest(receiver, list)
 
     local tradeCount = 0
     local countTo8 = 0
-
-    local tradedItems = {}
 
     for item,_ in pairs(list) do
 
@@ -567,7 +588,6 @@ function utils.tradeNewest(receiver, list)
                     end
                 end
 
-                table.insert(tradedItems, item)
                 tradeCount = tradeCount + 1
                 list[item] = nil
 
@@ -591,7 +611,7 @@ function utils.tradeNewest(receiver, list)
                 until not mq.TLO.Window('TradeWnd').Open()
                 mq.cmdf('/dobserve %s -drop Me.FreeInventory', receiver)
                 utils.cleanup()
-                return tradeCount, tradedItems
+                return tradeCount, list, true
             end
         end
     end
@@ -603,7 +623,7 @@ function utils.tradeNewest(receiver, list)
     until not mq.TLO.Window('TradeWnd').Open()
     mq.cmdf('/dobserve %s -drop Me.FreeInventory', receiver)
     utils.cleanup()
-    return tradeCount, tradedItems
+    return tradeCount, list
 end
 
 
@@ -662,13 +682,19 @@ function utils.putReal(list)
     for item,room in pairs(list) do
         if mq.TLO.FindItemCount('='..item)() > 0 then
             print('\at[TsC]\ao Putting \ay'..item..' \aoin your '..room..'.')
+            local id = mq.TLO.FindItem('='..item).ID() or 0
             local full = false
             repeat
 
-                mq.cmdf('/itemnotify "%s" leftmouseup', item)
-                mq.delay(500)
-                
+                mq.cmdf('/itemnotify #%d leftmouseup', id)
+
                 if room == 'Crate' then
+                    local tries = 0
+                    while mq.TLO.Window('RealEstateItemsWnd').Child('REIW_Move_Crate_Button').Enabled() == false and tries < 6 do
+                        tries = tries + 1
+                        mq.delay(1000)
+                    end
+
                     if mq.TLO.Window('RealEstateItemsWnd').Child('REIW_Move_Crate_Button').Enabled() == true then
                         mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Crate_Button leftmouseup')
                     else
@@ -676,6 +702,12 @@ function utils.putReal(list)
                         full = true
                     end
                 else
+                    local tries = 0
+                    while mq.TLO.Window('RealEstateItemsWnd').Child('REIW_Move_Closet_Button').Enabled() == false and tries < 6 do
+                        tries = tries + 1
+                        mq.delay(1000)
+                    end
+
                     if mq.TLO.Window('RealEstateItemsWnd').Child('REIW_Move_Closet_Button').Enabled() == true then
                         mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Closet_Button leftmouseup')
                     else
@@ -683,7 +715,7 @@ function utils.putReal(list)
                         full = true
                     end
                 end
-                mq.delay(300)
+                mq.delay(500)
 
             until mq.TLO.FindItemCount('='..item)() == 0 or full == true
             if full == false then
@@ -706,7 +738,7 @@ function utils.depot(depotList, checkSize)
     local mouseLocY = mq.TLO.Window('TradeskillDepotWnd').Y() + (mq.TLO.Window('TradeskillDepotWnd').Height() / 2)
 
     for index,item in pairs(depotList) do
-        
+
         utils.autoinv()
 
         if mq.TLO.FindItemCount('='..item)() > 0 then
@@ -729,7 +761,7 @@ function utils.depot(depotList, checkSize)
                             if mq.TLO.Window('ConfirmationDialogBox')() then
                                 mq.cmd('/no') --Avoid accidentally dropping items on the ground
                             end
-                            mq.delay(300)
+                            mq.delay(500)
 
                             attempts = attempts + 1
                             if attempts > 9 then

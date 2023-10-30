@@ -104,7 +104,6 @@ if isArtisan == true then
     end
 end
 
-mq.pickle(mq.configDir..'/TSC/tmp/qtable.lua', qTable)
 
 --Get modes from toons.lua into a separate table
 local modes = {}
@@ -163,6 +162,17 @@ local function defineTrades()
             if not matches[receiver] then matches[receiver] = {} end
 
             --Already add item that receiver will receive to their inventory to ensure item gets pulled into self-consolidate tree
+            if not allitems[receiver][item] then --In case this is the tiebreaker and they don't have this item
+                allitems[receiver][item] = {
+                    inventory = {},
+                    bank = {},
+                    plots = {},
+                    depot = 0,
+                    total = 0,
+                    locations = 0,
+                    destination = ""
+                }
+            end
             allitems[receiver][item]['locations'] = allitems[receiver][item]['locations'] + 1
             allitems[receiver][item]['inventory']['General'] = 1
         end
@@ -327,16 +337,7 @@ for toon, items in pairs(allitems) do
                         if utils.listSize(stuff.inventory) > 0 then
                             stuff.destination = 'Bank'
                         else
-                            local max = mq.TLO.FindItemBank('='..item).StackSize()
-                            local x = 0
-                            for _,qty in pairs(stuff['bank']) do
-                                if qty < max then
-                                    x = x + 1
-                                end
-                            end
-                            if x > 1 then
-                                stuff.destination = 'BankRestack'
-                            end
+                            stuff.destination = 'BankRestack'
                         end
                     else
                         stuff.destination = 'Leftovers'
@@ -349,6 +350,9 @@ for toon, items in pairs(allitems) do
                     consolidate[toon] = {}
                 end
                 consolidate[toon][item] = stuff.destination
+                if utils.listSize(stuff.plots) > 0 then
+                    consolidate[toon]['Real Estate'] = true
+                end
             end
         end
     end

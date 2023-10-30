@@ -109,7 +109,7 @@ print('\at[TsC]\ao Scanning items...')
 
 
 --Scan this toon. Send scope, ignore file, blank items table, ts or col mode. Returns # items, # slots, and populated items table.
-local countSlots, countItems = utils.scantwo(items, ignore, what, settings.includePlots)
+local countSlots, countItems = utils.scan(items, ignore, what, settings.includePlots)
 
 --Look for multiple incomplete stacks in inventory and restack them
 utils.sortBags(items)

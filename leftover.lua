@@ -5,12 +5,12 @@ local utils = require('utils')
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
 local toonPath = 'TSC/toons.lua'
-local movePath = 'TSC/tmp/movetable.lua'
+local consolPath = 'TSC/tmp/consolidate.lua'
 local artisanPath = 'TSC/artisan.lua'
 
 local settings = {}
 local toons = {}
-local moveTable = {}
+local consol = {}
 local artList = {}
 
 local function loadfiles()
@@ -28,12 +28,12 @@ local function loadfiles()
         toons = loadToons()
     end
 
-    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
-    if moveerror then
-        print('Error loading movetable.lua')
+    local consolidate, consolerror = loadfile(mq.configDir..'/'..consolPath)
+    if consolerror then
+        print('\at[TsC]\ao Error loading consolidate.lua')
         mq.exit()
-    elseif movefile then
-        moveTable = movefile()
+    elseif consolidate then
+        consol = consolidate()
     end
 
     local loadArt, artError = loadfile(mq.configDir..'/'..artisanPath)
@@ -48,7 +48,13 @@ loadfiles()
 print('\at[TsC]\ao Attempting to store leftover items...')
 mq.delay(1000)
 
-local storeList = moveTable[me]['rest']
+local storeList = {}
+for item,dest in pairs(consol[me]) do
+    if dest == 'Leftovers' then
+        table.insert(storeList, item)
+    end
+end
+
 
 local bankCount
 local depotCount
@@ -67,15 +73,6 @@ local function binds()
 end
 mq.bind('/tsresume', binds)
 
-local function listSize(list)
-    local n = 0
-    for _,item in pairs(list) do
-        if not string.match(item, 'be skipped') then
-            n = n + 1
-        end
-    end
-    return n
-end
 
 local firstRun = true
 local muleList = {}
@@ -108,7 +105,7 @@ local function giveToMules(previousMule)
 
     if mule then
 
-        thisTradeCount, muleList, full = utils.tradeNewest(mule, muleList, false)
+        thisTradeCount, muleList, full = utils.trade(mule, muleList)
         muleCount = muleCount + thisTradeCount
 
         if full == true then --Target's inventory is full, cancel any repeats.
@@ -123,53 +120,53 @@ end
 
 if rest == 'Depot > Bank > Mules' then
     if mq.TLO.TradeskillDepot.Enabled() then
-        if listSize(storeList) > 0 then
+        if utils.listSize(storeList) > 0 then
             depotCount, storeList = utils.depot(storeList)
         end
     else
         print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         bankCount, storeList = utils.bank(storeList)
     end
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         giveToMules()
     end
 elseif rest == 'Depot > Bank' then
     if mq.TLO.TradeskillDepot.Enabled() then
-        if listSize(storeList) > 0 then
+        if utils.listSize(storeList) > 0 then
             depotCount, storeList = utils.depot(storeList)
         end
     else
         print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         bankCount, storeList = utils.bank(storeList)
     end
 elseif rest == 'Depot > Mules' then
     if mq.TLO.TradeskillDepot.Enabled() then
-        if listSize(storeList) > 0 then
+        if utils.listSize(storeList) > 0 then
             depotCount, storeList = utils.depot(storeList)
         end
     else
         print('\at[TsC]\ay Personal depot is not enabled on this toon.')
     end
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         giveToMules()
     end
 elseif rest == 'Bank > Mules' then
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         bankCount, storeList = utils.bank(storeList)
     end
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         giveToMules()
     end
 elseif rest == 'Bank' then
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         bankCount, storeList = utils.bank(storeList)
     end
 elseif rest == 'Mules' then
-    if listSize(storeList) > 0 then
+    if utils.listSize(storeList) > 0 then
         giveToMules()
     end
 end
@@ -177,7 +174,7 @@ end
 if bankCount == nil then bankCount = 0 end
 if depotCount == nil then depotCount = 0 end
 
-if bankCount > 0 or depotCount > 0 then
+if bankCount > 0 or depotCount > 0 or muleCount > 0 then
     mq.cmdf('/dt %s \awDone with leftovers. Dumped \ay%s \awremaining items into the bank/depot and \ay%s \awonto mules.', settings.driver, bankCount+depotCount, muleCount)
 end
 

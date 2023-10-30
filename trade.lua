@@ -56,27 +56,9 @@ end
 --Send one toon's tradelist to function at a time
 local count = 0
 local thisCount = 0
-local tradedItems
 for receiver,_ in pairs(tradeList) do
-    thisCount, tradedItems = utils.tradeNewest(receiver, tradeList[receiver])
+    thisCount = utils.trade(receiver, tradeList[receiver])
     count = count + thisCount
-
-    local items = {} --Load receiver's items
-    local allitems, itemerror = loadfile(mq.configDir..'/TSC/tmp/allitems_'..receiver..'.lua')
-    if itemerror then
-        print('Error loading allitems_'..receiver..'.lua')
-        mq.exit()
-    elseif allitems then
-        items = allitems()
-    end
-
-    --Add traded items to receiver's item list so we don't have to rescan them
-    for _,item in pairs(tradedItems) do
-        if utils.listSize(items[item]['inventory']) < 1 then
-            items[item]['inventory']['General'] = 1
-        end
-    end
-    mq.pickle(mq.configDir..'/TSC/tmp/allitems_'..receiver..'.lua', items)
 end
 
 if count > 0 then

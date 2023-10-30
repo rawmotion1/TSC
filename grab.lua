@@ -3,6 +3,7 @@ local mq = require('mq')
 local utils = require('utils')
 local home = require('home')
 
+
 local args = {...}
 local what = tonumber(args[1]) --41 for ts mats, 19 for collectibles
 
@@ -114,6 +115,7 @@ end
 
 local newCount
 if shouldReal == true then
+    mq.cmdf('/dt %s \awHeading to Sunrise Hills.', settings.driver)
     for _,v in pairs(realList) do
         print('\at[TsC]\ay '..v..'\ao needs to be picked up from your plot.')
     end
@@ -137,17 +139,59 @@ if count > 0 then
     mq.cmdf('/dgt %s \awDone grabbing. Grabbed \ay%s \awunique items.', settings.driver, count)
 end
 
-if shouldReal then
+local stuck = false
+local tryAgain = false
+local function returnToStart()
     mq.cmdf('/travelto %s', startZone)
     print('\at[TsC]\ao Returning to \ay'..startZone..'\ao.')
-    while mq.TLO.Zone.ShortName() ~= startZone do
-        mq.delay(500)
+
+    local startx, starty, endx, endy, diffx, diffy
+    while mq.TLO.Navigation.Active() and mq.TLO.Zone.ShortName() == 'neighborhood' do
+        startx, starty = mq.TLO.Me.X(), mq.TLO.Me.Y()
+        mq.delay(5000)
+        endx, endy = mq.TLO.Me.X(), mq.TLO.Me.Y()
+        diffx, diffy = math.abs(endx - startx), math.abs(endy - starty)
+        if diffx < 5 and diffy < 5 then
+            stuck = true
+        end
+        while stuck == true do
+            local function stop() return tryAgain end
+            mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \ayis probably stuck on a wall in Sunrise Hills.', mq.TLO.Me.Name())
+            mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Get them unstuck, then type \ag/tsresume\ay from their EQ window.')
+            mq.delay(10000, stop)
+        end
     end
 end
+
+local function binds()
+    tryAgain = true
+    stuck = false
+    returnToStart()
+end
+mq.bind('/tsresume', binds)
+
+if shouldReal then
+    returnToStart()
+end
+
+while mq.TLO.Zone.ShortName() ~= startZone do
+    mq.delay(500)
+end
+
+mq.delay(2000)
 
 --Tell init that this script is done
 if settings.driver == me then
     mq.cmd('/tsc donegrabbing')
 else
+    local zone
+    repeat --Make sure driver is available before sending done command
+        mq.cmdf('/dquery %s -q Zone.ShortName', settings.driver)
+        mq.delay(300)
+        zone = mq.TLO.DanNet.Query()
+        mq.delay(5000)
+    until zone == startZone
+    mq.delay(3000)
     mq.cmdf('/dex %s /tsc donegrabbing', settings.driver)
 end
+mq.unbind('/tsresume')
