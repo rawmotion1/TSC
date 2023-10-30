@@ -4,10 +4,12 @@ local utils = require('utils')
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
-local movePath = 'TSC/tmp/movetable.lua'
+local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
+local consolPath = 'TSC/tmp/consolidate.lua'
 
 local settings = {}
-local moveTable = {}
+local items = {}
+local consol = {}
 
 local function loadfiles()
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
@@ -17,12 +19,20 @@ local function loadfiles()
         settings = loadSettings()
     end
 
-    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
-    if moveerror then
-        print('Error loading movetable.lua')
+    local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
+    if itemerror then
+        print('\at[TsC]\ao Error loading allitems_'..me..'.lua')
         mq.exit()
-    elseif movefile then
-        moveTable = movefile()
+    elseif allitems then
+        items = allitems()
+    end
+
+    local consolidate, consolerror = loadfile(mq.configDir..'/'..consolPath)
+    if consolerror then
+        print('\at[TsC]\ao Error loading consolidate.lua')
+        mq.exit()
+    elseif consolidate then
+        consol = consolidate()
     end
 end
 loadfiles()
@@ -30,18 +40,19 @@ loadfiles()
 print('\at[TsC]\ao Looking for items to move to depot...')
 mq.delay(1000)
 
-local function listSize(list)
-    local n = 0
-    for _,item in pairs(list) do
-        if not string.match(item, 'be skipped') then
-            n = n + 1
+
+local depotList = {}
+local bankToDepotList = {}
+
+for item, dest in pairs(consol[me]) do
+    if dest == 'Depot' then
+        if utils.listSize(items[item]['bank']) > 0 then
+            table.insert(bankToDepotList, item)
+        else
+            table.insert(depotList, item)
         end
     end
-    return n
 end
-
-local depotList = moveTable[me]['todepot']
-local bankToDepotList = moveTable[me]['tomove']
 
 local count = 0
 local move = 0
@@ -52,10 +63,10 @@ end
 mq.bind('/tsresume', binds)
 
 if mq.TLO.TradeskillDepot.Enabled() then
-    if listSize(depotList) > 0 then
+    if utils.listSize(depotList) > 0 then
         count = count + utils.depot(depotList, false) --False tells depot function not to worry about depot capacity since it's just adding to existing items
     end
-    if listSize(bankToDepotList) > 0 then
+    if utils.listSize(bankToDepotList) > 0 then
         move = move + utils.bankToDepot(bankToDepotList)
     end
 else
@@ -72,3 +83,5 @@ if settings.driver == me then
 else
     mq.cmdf('/dex %s /tsc donedepot', settings.driver)
 end
+
+mq.unbind('/tsresume')

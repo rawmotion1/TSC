@@ -4,10 +4,13 @@ local utils = require('utils')
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
-local movePath = 'TSC/tmp/movetable.lua'
+local consolPath = 'TSC/tmp/consolidate.lua'
+local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
 
 local settings = {}
-local moveTable = {}
+local consol = {}
+local items = {}
+
 
 local function loadfiles()
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
@@ -17,24 +20,53 @@ local function loadfiles()
         settings = loadSettings()
     end
 
-    local movefile, moveerror = loadfile(mq.configDir..'/'..movePath)
-    if moveerror then
-        print('Error loading movetable.lua')
+    local consollist, consolError = loadfile(mq.configDir..'/'..consolPath)
+    if consolError then
+        print('\at[TsC]\ao Error loading consolidate.lua')
+    elseif consollist then
+        consol = consollist()
+    end
+
+    local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
+    if itemerror then
+        print('\at[TsC]\ao Error loading allitems_'..me..'.lua')
         mq.exit()
-    elseif movefile then
-        moveTable = movefile()
+    elseif allitems then
+        items = allitems()
     end
 end
 loadfiles()
 
 print('\at[TsC]\ao Looking for items to move to bank...')
+
+local bankList = {}
+local restackList = {}
+if consol[me] then
+    for item,dest in pairs(consol[me]) do
+        if dest == 'Bank' then
+            table.insert(bankList, item)
+        end
+        if dest == 'BankRestack' then
+            local max = mq.TLO.FindItemBank('='..item).StackSize() or 0
+            local x = 0
+            for _,qty in pairs(items[item]['bank']) do
+                if qty < max then x = x + 1 end
+            end
+            if x > 1 then
+                table.insert(restackList, item)
+                table.insert(bankList, item)
+            end
+        end
+    end
+end
 mq.delay(1000)
 
-local bankList = moveTable[me]['tobank']
 
 local count = 0
-
-count = count + utils.bank(bankList)
+if utils.listSize(bankList) > 0 or utils.listSize(restackList) > 0 then
+    utils.grab(restackList)
+    count = count + utils.bank(bankList)
+end
 
 if count > 0 then
     mq.cmdf('/dt %s \awDone banking. Banked \ay%s \awunique items.', settings.driver, count)

@@ -1,3 +1,7 @@
+v2.0.0 - 30.10.2023
+- Added real-estate support
+- Major refactor
+
 v1.0.17 - 20.10.2023
 - Fix for issue with toons and pets having the same name
 

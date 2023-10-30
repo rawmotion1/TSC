@@ -4,10 +4,9 @@ local utils = require('utils')
 
 local args = {...}
 local name = args[1] --receiver
-local scope = tonumber(args[2]) --4 for inventory, 1 for everywhere
-local what = tonumber(args[3]) -- 41 for mats, 19 for collectibles
-local bank = args[4]
-local depot = args[5]
+local what = tonumber(args[2]) -- 41 for mats, 19 for collectibles
+local bank = args[3]
+local depot = args[4]
 
 if bank == 'true' then bank = true end
 if depot == 'true' then depot = true end
@@ -37,24 +36,24 @@ local function loadfiles()
 end
 loadfiles()
 
+if utils.listSize(items) == 0 then
+    mq.cmdf('/dt %s \awNothing to give away.', settings.driver)
+    --Tell init that this script is done
+    if settings.driver == me then
+        mq.cmd('/tsc donegiving')
+    else
+        mq.cmdf('/dex %s /tsc donegiving', settings.driver)
+    end
+    mq.exit()
+end
 
+local full
 local shouldGrab
 local grabList = {}
 local grabListSize = 0
-if scope == 1 then --if all mode, create list of things to grab
-    for item,_ in pairs(items) do
-        local inBank = false
-        for _,location in pairs(items[item]['locations']) do
-            
-            if bank == true and string.match(location,"Bank") then
-                inBank = true
-                print('here')
-            end
-            if depot == true and string.match(location,"Personal") then
-                inBank = true
-            end
-        end
-        if inBank == true then
+if bank == true or depot == true then
+    for item,stuff in pairs(items) do
+        if utils.listSize(stuff['bank']) > 0 or stuff['depot'] > 0 then
             table.insert(grabList, item)
             shouldGrab = true
             grabListSize = grabListSize + 1
@@ -67,23 +66,23 @@ local mustRepeat
 local thisTradeCount
 local tradeCount = 0
 local function give()
-    if scope == 1 then
+    if shouldGrab == true then
         local grabCount
 
-        if shouldGrab == true then
-            grabCount, grabList = utils.grab(grabList, 2, what) --2:give mode, means it will return the reduced grabList after each grab
 
-            if grabCount < grabListSize then --My inventory was full and I couldn't grab everything. I will have to repeat the cycle.
-                grabListSize = grabListSize - grabCount
-                mustRepeat = true
-            else --I grabbed everything. No need for further repetitions.
-                shouldGrab = false
-                mustRepeat = false
-            end
+        grabCount, grabList = utils.grab(grabList, what)
+
+        if grabCount < grabListSize then --My inventory was full and I couldn't grab everything. I will have to repeat the cycle.
+            grabListSize = grabListSize - grabCount
+            mustRepeat = true
+        else --I grabbed everything. No need for further repetitions.
+            shouldGrab = false
+            mustRepeat = false
         end
+
     end
 
-    thisTradeCount, items, full = utils.tradeNewest(name, items, false)
+    thisTradeCount, items, full = utils.trade(name, items)
     tradeCount = tradeCount + thisTradeCount
     
     if full == true then --Target's inventory is full, cancel any repeats.

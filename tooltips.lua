@@ -90,6 +90,20 @@ slots each toon gained or lost. Requires
 an extra scan.
 ]]
 
+tip.real = [[
+Include items stored in your real estate
+plots in the consolidation routines. This
+may involve one or two runs to Sunrise 
+Hills and back to grab and/or deposit 
+items.
+]]
+
+tip.prefReal = [[
+If you have the same item in your bank and
+on your plot, move it to your plot. If this
+is off, it will move it to your bank.
+]]
+
 tip.go = [[
 Run the full consolidation routine on all
 your toons. Can take a while depending on

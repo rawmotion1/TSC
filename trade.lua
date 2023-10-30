@@ -55,8 +55,10 @@ end
 
 --Send one toon's tradelist to function at a time
 local count = 0
+local thisCount = 0
 for receiver,_ in pairs(tradeList) do
-    count = count + utils.tradeNewest(receiver, tradeList[receiver])
+    thisCount = utils.trade(receiver, tradeList[receiver])
+    count = count + thisCount
 end
 
 if count > 0 then
