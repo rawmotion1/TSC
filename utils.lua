@@ -179,7 +179,7 @@ end
 
 function utils.scan(items, ignore, what, realestate)
     utils.cleanup()
-    utils.banker()
+    mq.TLO.Window('TradeskillDepotWnd').DoOpen()
     utils.loadFindWindow(what, 1)
 
     local listSize = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').Items()
@@ -744,11 +744,14 @@ function utils.depot(depotList, checkSize)
         if mq.TLO.FindItemCount('='..item)() > 0 then
             print('\at[TsC]\ao Putting \ay'..item..' \aoin your depot.')
             if checkSize == false or mq.TLO.TradeskillDepot.Count() < mq.TLO.TradeskillDepot.Capacity() then
+                local skip = false
                 repeat
-
+                    if mq.TLO.TradeskillDepot.FindItemCount('='..item)() >= 99999 then
+                        print('\at[TsC]\ao Your depot can\'t hold any more \ay'..item..'.')
+                        break
+                    end
                     utils.pickup(item)
 
-                    local skip = false
                     if mq.TLO.Cursor.Tradeskills() and mq.TLO.Cursor.Stackable() and not mq.TLO.Cursor.Lore() and not mq.TLO.Cursor.NoDrop() then
 
                         mq.cmd('/foreground self.Name')
@@ -784,13 +787,15 @@ function utils.depot(depotList, checkSize)
                     end
 
                 until mq.TLO.FindItemCount('='..item)() == 0 or skip == true
+                if skip == false then
+                    count = count + 1
+                    depotList[index] = nil
+                end
             else
                 print('\at[TsC]\ao Tradeskill depot is full!.')
                 utils.cleanup()
                 return count, depotList
             end
-            count = count + 1
-            depotList[index] = nil
         end
         mq.delay(200)
     end

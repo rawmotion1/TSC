@@ -1,3 +1,8 @@
+v2.0.1 - 31.10.2023
+- Scan no longer causes players to run to banker
+- Added address for 103 Betwixt Avenue
+- Won't try to deposit into depot if 99,999 limit reached
+
 v2.0.0 - 30.10.2023
 - Added real-estate support
 - Major refactor
