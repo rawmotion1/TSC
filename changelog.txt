@@ -1,3 +1,9 @@
+v2.0.2
+- Fix (I think) for sometimes not picking up find window item
+- Fix for picking up items with quotes in name
+- Stop should now kill all processes, including new ones
+- Won't try to nav to plot if you're already there
+
 v2.0.1 - 31.10.2023
 - Scan no longer causes players to run to banker
 - Added address for 103 Betwixt Avenue

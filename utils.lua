@@ -8,6 +8,7 @@ function utils.stopAll(restart)
     print('\at[TsC]\ay Stopping all processes and restarting.')
     mq.cmd('/dgae /squelch /lua stop TSC/scan.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/match.lua')
+    mq.cmd('/dgae /squelch /lua stop TSC/selfmatch.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/grab.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/trade.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/bank.lua')
@@ -15,6 +16,7 @@ function utils.stopAll(restart)
     mq.cmd('/dgae /squelch /lua stop TSC/leftover.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/give.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/plots.lua')
+    mq.cmd('/dgae /squelch /lua stop TSC/home.lua')
     if restart == true then
         mq.cmd('/lua run TSC/restart')
     end
@@ -96,8 +98,12 @@ end
 --Loc: fw=find window, inv=inventory
 function utils.pickup(item, loc)
     repeat
-        if loc == 'fw' then mq.cmd('/shift /notify FindItemWnd FIW_GrabButton leftmouseup') else mq.cmdf('/shift /itemnotify \"%s\" leftmouseup', item) end
-        mq.delay(100)
+        if loc == 'fw' then 
+            mq.cmd('/shift /notify FindItemWnd FIW_GrabButton leftmouseup')
+        else
+            local id = mq.TLO.FindItem('='..item).ID() or 0
+            mq.cmdf('/shift /itemnotify #%d leftmouseup', id) end
+            mq.delay(100)
     until mq.TLO.Cursor() == item or mq.TLO.Window('QuantityWnd').Open()
     if mq.TLO.Window('QuantityWnd').Open() then
         repeat
@@ -379,7 +385,10 @@ function utils.grab(grabList, what, mode)
     --Iterate list backwards so order isn't modified
     for i=listSize, 1, -1 do
         local row = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,2)()
-        mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', i)
+        repeat
+            mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', i)
+            mq.delay(100)
+        until mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').SelectedIndex() == i
         for k,v in pairs(grabList) do
             if row == v then
                 if mq.TLO.Me.FreeInventory() > 0 then

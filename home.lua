@@ -136,7 +136,10 @@ function home.go(neigh, plot)
         -----------Nav to plot's switch
         local function navToPlot()
             state = 'plot'
-            mq.cmdf('/squelch /nav locxy %s', myPlot)
+            local x, y = string.match(myPlot, "([^,]+),%s*([^,]+)")
+            if mq.TLO.Math.Distance(y..','..x)() > 20 then
+                mq.cmdf('/squelch /nav locxy %s', myPlot)
+            end
             local startx, starty, endx, endy, diffx, diffy
             while mq.TLO.Navigation.Active() do
                 startx, starty = mq.TLO.Me.X(), mq.TLO.Me.Y()
