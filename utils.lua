@@ -387,7 +387,7 @@ function utils.grab(grabList, what, mode)
         local row = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,2)()
         repeat
             mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', i)
-            mq.delay(100)
+            mq.delay(1)
         until mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').SelectedIndex() == i
         for k,v in pairs(grabList) do
             if row == v then

@@ -111,6 +111,19 @@ print('\at[TsC]\ao Scanning items...')
 --Scan this toon. Send scope, ignore file, blank items table, ts or col mode. Returns # items, # slots, and populated items table.
 local countSlots, countItems = utils.scan(items, ignore, what, settings.includePlots)
 
+for item,prop in pairs(items) do
+    if utils.listSize(prop.bank) > 1 then
+        local max = mq.TLO.FindItemBank('='..item).StackSize() or 0
+        local x = 0
+        for _,qty in pairs(prop.bank) do
+            if qty < max then x = x + 1 end
+        end
+        if x > 1 then
+            prop.destination = 'BankRestack'
+        end
+    end
+end
+
 --Look for multiple incomplete stacks in inventory and restack them
 utils.sortBags(items)
 

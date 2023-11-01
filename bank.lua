@@ -45,26 +45,31 @@ if consol[me] then
     for item,dest in pairs(consol[me]) do
         if dest == 'Bank' then
             table.insert(bankList, item)
-        end
-        if dest == 'BankRestack' then
-            local max = mq.TLO.FindItemBank('='..item).StackSize() or 0
-            local x = 0
-            for _,qty in pairs(items[item]['bank']) do
-                if qty < max then x = x + 1 end
+            if utils.listSize(items[item]['bank']) > 1 then
+                local max = mq.TLO.FindItemBank('='..item).StackSize() or 0
+                local x = 0
+                for _,qty in pairs(items[item]['bank']) do
+                    if qty < max then x = x + 1 end
+                end
+                if x > 1 then
+                    table.insert(restackList, item)
+                end
             end
-            if x > 1 then
-                table.insert(restackList, item)
-                table.insert(bankList, item)
-            end
+        elseif dest == 'BankRestack' then
+            table.insert(bankList, item)
+            table.insert(restackList, item)
         end
     end
 end
 mq.delay(1000)
 
+if utils.listSize(restackList) > 0 then
+    print('\at[TsC]\ao Grabbing items to restack...')
+    utils.grab(restackList)
+end
 
 local count = 0
 if utils.listSize(bankList) > 0 or utils.listSize(restackList) > 0 then
-    utils.grab(restackList)
     count = count + utils.bank(bankList)
 end
 

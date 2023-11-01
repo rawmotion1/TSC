@@ -67,7 +67,7 @@ end
 local ltoons = 0
 local allitems = {}
 for _,toon in pairs(toons) do
-    if mq.TLO.NearestSpawn('='..toon.name)() then --Only load results of toons in-zone
+    if mq.TLO.Spawn('PC ='..toon.name)() then --Only load results of toons in-zone
         local path = 'TSC/tmp/allitems_'..toon.name..'.lua'
         local table, error = loadfile(mq.configDir..'/'..path)
         if error then
@@ -314,7 +314,7 @@ for toon, items in pairs(allitems) do
     for item, stuff in pairs(items) do
 
         --If destination is empty, no trades were found and it needs to be self-consolidated
-        if stuff.destination == "" then
+        if stuff.destination == "" or stuff.destination == "BankRestack" then
             if stuff.locations <= 1 then
                 if utils.listSize(stuff.inventory) == 0 then
                     --Already consolidated
@@ -337,7 +337,7 @@ for toon, items in pairs(allitems) do
                         if utils.listSize(stuff.inventory) > 0 then
                             stuff.destination = 'Bank'
                         else
-                            stuff.destination = 'BankRestack'
+                            --Leave as "" or bankrestack
                         end
                     else
                         stuff.destination = 'Leftovers'

@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.0.2'
+local version = '2.0.3'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1565,7 +1565,7 @@ local function matchWindow()
                             table.sort(sortedKeys)
 
                             for _,item in pairs(sortedKeys) do
-                                if consol[toon.name][item] ~= "Leftovers" and consol[toon.name][item] ~= "BankRestack" and consol[toon.name][item] ~= true then
+                                if consol[toon.name][item] ~= "Leftovers" and consol[toon.name][item] ~= true then
                                     local function update(arg)
                                         if consol[toon.name][item] ~= 'skipped' and consol[toon.name][item] ~= 'ignored' and consol[toon.name][item] ~= 'pignored'  then
                                             if arg == 'skip' then
@@ -1604,6 +1604,8 @@ local function matchWindow()
                                         ImGui.TextDisabled(item..' is now personally ignored')
                                     elseif consol[toon.name][item] == 'skipped' then
                                         ImGui.TextDisabled(item..' will be skipped once')
+                                    elseif consol[toon.name][item] == "BankRestack" then
+                                        ImGui.Text(item..' needs to be restacked in the bank')
                                     else
                                         ImGui.Text(item..' will go to '..consol[toon.name][item])
                                     end

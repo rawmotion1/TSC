@@ -1,4 +1,9 @@
-v2.0.2
+v2.0.3 01.11.2023
+- Bank routine: no longer scans bank unless restacking
+- Sped up find-window scanning
+- Improved consolidating incomplete stacks in the bank
+
+v2.0.2 01.11.2023
 - Fix (I think) for sometimes not picking up find window item
 - Fix for picking up items with quotes in name
 - Stop should now kill all processes, including new ones
