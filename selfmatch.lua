@@ -93,7 +93,7 @@ end
 local lconsol = 0
 if consolidate[me] then
     for _,dest in pairs(consolidate[me]) do
-        if dest ~= true and dest ~= 'Leftovers' and dest ~= 'BankRestack' then
+        if dest ~= true and dest ~= 'Leftovers' then
             lconsol = lconsol + 1
         end
     end

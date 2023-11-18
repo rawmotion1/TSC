@@ -81,7 +81,7 @@ function utils.loadFindWindow(what, scope) --what: 41 is ts mats 19 is collectib
         mq.delay(300)
     end
     mq.cmd('/notify FindItemWnd FIW_QueryButton leftmouseup')
-    mq.delay(3500)
+    mq.delay(2000)
 end
 
 function utils.cleanup()
@@ -178,7 +178,13 @@ function utils.banker()
 
     while not mq.TLO.Window('TradeskillDepotWnd').Open() do
         mq.cmd('/notify BigBankWnd BIGB_TradeskillDepot leftmouseup')
-        mq.delay(5000)
+        --Wait up to 5 seconds for items to load
+        local function stop()
+            if mq.TLO.Window('TradeSkillDepotWnd').Child('TD_Item_Count_Number').Text() ~= '0 / 0' then
+                return true
+            end
+        end
+        mq.delay(5000,stop)
     end
 end
 
