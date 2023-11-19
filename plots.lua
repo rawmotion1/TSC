@@ -127,7 +127,11 @@ local function createLists()
                                 print('\at[TsC]\ay '..item..' \ao needs to go from one room to another')
                                 if not plotRestackPut[destination] then plotRestackPut[destination] = {} end
                                 if not plotRestackGrab[destination] then plotRestackGrab[destination] = {} end
-                                if not plotRestackPut[destination][item] then plotRestackPut[destination][item] = room end
+                                if not plotRestackPut[destination][item] then
+                                    local myRoom = 'Closet'
+                                    if string.match(room,'Crate') then myRoom = 'Crate' end
+                                    plotRestackPut[destination][item] = myRoom
+                                end
                                 if skip(item, plotRestackGrab[destination]) == false then table.insert(plotRestackGrab[destination], item) end
                             end
                         end
