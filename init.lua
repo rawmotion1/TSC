@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.0.4'
+local version = '2.0.5'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -161,7 +161,6 @@ end
 
 --Check which toons are in-zone and populate toons table (included in main loop)
 local function checkToons()
-    table.sort(alltoons, utils.sortToons)
     local tmptableOn = {}
     for index,toon in pairs(alltoons) do
         if mq.TLO.NearestSpawn('='..toon.name)() == nil then
@@ -171,6 +170,8 @@ local function checkToons()
             table.insert(tmptableOn, toon)
         end
     end
+    table.sort(alltoons, utils.sortToons)
+    reIndex(alltoons)
     toons = tmptableOn --Toons online and in zone
 end
 
@@ -2013,14 +2014,14 @@ local function tscWindow()
 
        --ImGui.TableSetupScrollFreeze(0, 1) -- causes crash for some reason
 
-
+        
         --A row for each toon
         local comboModeID = '##1'
         local comboRestID = '##2'
         for index,toon in pairs(alltoons) do
             comboModeID = comboModeID..toon.name
             comboRestID = comboRestID..toon.name
-
+            
             --First list toons that are in-zone
             if toon.inzone == true then
             ImGui.TableNextRow()
@@ -2347,7 +2348,6 @@ end
 
 mq.imgui.init('TSC', initGui)
 
-local terminate = false
 while openGui do
     whileWaiting()
     if goNow == true then goNow = false go(itemMode) end

@@ -767,7 +767,7 @@ function utils.depot(depotList, checkSize)
                     end
                     utils.pickup(item)
 
-                    if mq.TLO.Cursor.Tradeskills() and mq.TLO.Cursor.Stackable() and not mq.TLO.Cursor.Lore() and not mq.TLO.Cursor.NoDrop() then
+                    if mq.TLO.Cursor.Tradeskills() and mq.TLO.Cursor.Stackable() and not mq.TLO.Cursor.Lore() and not mq.TLO.Cursor.NoDrop() and not mq.TLO.Cursor.Attuneable() then
 
                         mq.cmd('/foreground self.Name')
 
