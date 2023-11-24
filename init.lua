@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.0.6'
+local version = '2.0.7'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -163,7 +163,7 @@ end
 local function checkToons()
     local tmptableOn = {}
     for index,toon in pairs(alltoons) do
-        if mq.TLO.NearestSpawn('='..toon.name)() == nil then
+        if mq.TLO.Spawn('PC ='..toon.name)() == nil then
             alltoons[index].inzone = false
         else
             alltoons[index].inzone = true
@@ -178,7 +178,7 @@ end
 --Check mule inventories (included in main loop)
 local function checkMules()
     for index,mule in pairs(settings.mules) do
-        if mq.TLO.NearestSpawn('='..mule.name)() then
+        if mq.TLO.Spawn('PC ='..mule.name)() then
             settings['mules'][index]['inzone'] = true
         else
             settings['mules'][index]['inzone'] = false
@@ -250,7 +250,7 @@ local function getGivePeers()
     giveComboOptions = {}
     for _,name in pairs(peerTable) do
         local skip = false
-        if not mq.TLO.NearestSpawn('='..name)() then
+        if not mq.TLO.Spawn('PC ='..name)() then
             skip = true
         end
         if skip == false then
@@ -1091,7 +1091,7 @@ local function addAllInZone()
                 skip = true
             end
         end
-        if skip == false and mq.TLO.NearestSpawn('='..name) then
+        if skip == false and mq.TLO.Spawn('PC ='..name) then
             local entry = {
                 name = name,
                 inzone = true,
@@ -1481,9 +1481,9 @@ local function matchWindow()
                                             matches[toon.name][item] = 'skipped'
                                         elseif arg == 'ignore' then
                                             ignoreMatch(item, 'global')
-                                            for _,player in pairs(toons) do
-                                                if matches[player.name][item] then
-                                                    matches[player.name][item] = 'ignored'
+                                            for player,_ in pairs(matches) do
+                                                if matches[player][item] then
+                                                    matches[player][item] = 'ignored'
                                                 end
                                             end
                                             for player,_ in pairs(consol) do
