@@ -636,7 +636,7 @@ function utils.trade(receiver, list)
         mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
         mq.delay(1000)
     until not mq.TLO.Window('TradeWnd').Open()
-    mq.cmdf('/dobserve %s -drop Me.FreeInventory', receiver)
+    --mq.cmdf('/dobserve %s -drop Me.FreeInventory', receiver)
     utils.cleanup()
     return tradeCount, list
 end

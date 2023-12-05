@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.0.7'
+local version = '2.0.8'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -2229,7 +2229,7 @@ local function tscWindow()
                     muleContext(index, mule.name)
                 ImGui.TableNextColumn()
                     local inv = mq.TLO.DanNet(mule.name).O('Me.FreeInventory')() or '0'
-                    if zone == true then
+                    if mq.TLO.Spawn('PC ='..mule.name)() then
                         ImGui.TextColored(1,1,1,1, inv)
                     else
                         ImGui.TextDisabled(inv)
