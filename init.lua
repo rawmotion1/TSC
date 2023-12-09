@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.0.8'
+local version = '2.0.9'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1678,7 +1678,7 @@ local function ignoreWindow()
                     addIgnore('personal')
                 end
             end
-            if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.addignoreitem) end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.addignoreitem) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
             ImGui.SameLine()
 
             if ImGui.Button('Bulk add...') then ImGui.OpenPopup('Bulk add') end
@@ -1721,7 +1721,7 @@ local function ignoreWindow()
                     ImGui.SameLine()
                     ImGui.Text('\xee\xa2\x8f')
                 ImGui.EndGroup()
-                if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.importignore) end
+                if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.importignore) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
             ImGui.PopStyleColor()
 
             if whosIgnore == '' then
@@ -1790,7 +1790,7 @@ local function artWindow()
         if drawArt then
 
             if ImGui.Button('Add item') then addIgnore('artisan') end
-            if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.addignoreitem) end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.addignoreitem) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
             ImGui.SameLine()
 
             if ImGui.Button('Bulk add...') then ImGui.OpenPopup('Bulk add') end
@@ -1821,7 +1821,7 @@ local function artWindow()
                     ImGui.SameLine()
                     ImGui.Text('\xee\xa2\x8f')
                 ImGui.EndGroup()
-                if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.importignore) end
+                if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.importignore) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
             ImGui.PopStyleColor()
 
             ImGui.TextWrapped('Items listed here will always be given to your artisan.')
@@ -1949,7 +1949,7 @@ local function tscWindow()
                 ImGui.SameLine()
                 ImGui.TextColored(0,1,0,1,fname(settings.tiebreaker))
                 ImGui.EndGroup()
-                if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.tie) end
+                if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.tie) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
             --Artisan
             ImGui.TableNextColumn()
@@ -1959,7 +1959,7 @@ local function tscWindow()
                 ImGui.SameLine()
                 ImGui.TextColored(0,1,0,1,fname(settings.artisan))
                 ImGui.EndGroup()
-                if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.art) end
+                if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.art) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
                 ImGui.SameLine()
                 ImGui.Text('\xef\x80\x94')
                 if ImGui.IsItemHovered() then ImGui.SetTooltip('Remove artisan') end
@@ -1969,11 +1969,11 @@ local function tscWindow()
                 local x,y = ImGui.GetContentRegionAvail()
                 local half = x/2 - 4
                 if ImGui.Button('Artisan list', half, 0) then openArt = not openArt end
-                if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.hoardlist) end
+                if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.hoardlist) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
                 ImGui.SameLine()
                 ImGui.SetNextItemWidth(x)
                 if ImGui.Button('Ignore list', half, 0) then openList = not openList end
-                if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.ignorebutton) end
+                if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.ignorebutton) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.EndTable()
     end
     --End status section
@@ -1998,19 +1998,19 @@ local function tscWindow()
             ImGui.TextColored(1,1,0,1,'Name')
         ImGui.TableNextColumn()
             ImGui.TextColored(1,1,0,1,'Mode')
-            if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.mode) end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.mode) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
         ImGui.TableNextColumn()
             ImGui.TextColored(1,1,0,1,'Leftovers')
-            if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.rest) end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.rest) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
         ImGui.TableNextColumn()
             ImGui.TextColored(1,1,0,1,'Tidy up')
-            if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.self) end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.self) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
         ImGui.TableNextColumn()
             ImGui.TextColored(1,1,0,1,'Give')
-            if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.give) end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.give) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
        --ImGui.TableSetupScrollFreeze(0, 1) -- causes crash for some reason
 
@@ -2181,7 +2181,7 @@ local function tscWindow()
         if ImGui.Button('Add...') then ImGui.OpenPopup('addtoon') end
         ImGui.SameLine()
         ImGui.Text('\xee\xa2\x8f')
-        if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.toon) end
+        if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.toon) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
         --Add toon pop-up
         if ImGui.BeginPopup('addtoon') then
@@ -2243,7 +2243,7 @@ local function tscWindow()
         if ImGui.Button('Add...') then ImGui.OpenPopup('addmule') end
         ImGui.SameLine()
         ImGui.Text('\xee\xa2\x8f')
-        if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.mule) end
+        if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.mule) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
         --Add mule pop-up
         if ImGui.BeginPopup('addmule') then
@@ -2268,14 +2268,14 @@ local function tscWindow()
     ImGui.PushStyleColor(ImGuiCol.Button, 0, 1, 0, .5)
         if ImGui.Button('Consolidate all', 150,0) then ImGui.OpenPopup('Consolidate confirmation') end
     ImGui.PopStyleColor()
-    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.go) end
+    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.go) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
 
     --Stop button
     ImGui.PushStyleColor(ImGuiCol.Button, 1, 0, 0, .5)
         if ImGui.Button('Stop all') then utils.stopAll(true) end
     ImGui.PopStyleColor()
-    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.stop) end
+    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.stop) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
 
     --Consolidate all confirmation modal
@@ -2313,14 +2313,14 @@ local function tscWindow()
     local updateReal
     settings.includePlots, updateReal = ImGui.Checkbox('Include plots', settings.includePlots)
 	if updateReal then utils.switch(settings.includePlots) save() end
-    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.real) end
+    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.real) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
 
     if settings.includePlots == true then
         local updateReal2
         settings.preferPlots, updateReal2 = ImGui.Checkbox('Prefer plots', settings.preferPlots)
         if updateReal2 then utils.switch(settings.preferPlots) save() end
-        if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.prefReal) end
+        if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.prefReal) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
         ImGui.SameLine()
     end
 
@@ -2328,7 +2328,7 @@ local function tscWindow()
     local update
     settings.stats, update = ImGui.Checkbox('Run stats', settings.stats)
 	if update then utils.switch(settings.stats) save() end
-    if ImGui.IsItemHovered() then ImGui.SetTooltip(tip.stats) end
+    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.stats) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
 
     ImGui.TextColored(1,1,1,.7,' v'..version)
