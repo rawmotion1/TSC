@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.0.9'
+local version = '2.1.0'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -189,6 +189,9 @@ end
 --Set observers on mules
 local function setObservers()
     for _,v in pairs(settings['mules']) do
+        mq.cmdf('/dobserve %s -q Me.FreeInventory', v.name)
+    end
+    for _,v in pairs(toons) do
         mq.cmdf('/dobserve %s -q Me.FreeInventory', v.name)
     end
 end
@@ -2029,8 +2032,13 @@ local function tscWindow()
                 --Cloud
                 ImGui.TableNextColumn()
                     ImGui.AlignTextToFramePadding()
-                    ImGui.TextColored(0,1,0,1,'\xef\x84\x91')
-                    if ImGui.IsItemHovered() then ImGui.SetTooltip('Online and in-zone') end
+                    if tonumber(mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) > 49 then
+                        ImGui.TextColored(0,1,0,1,'\xef\x84\x91')
+                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Online and in-zone. Inv: '..mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) end
+                    else
+                        ImGui.TextColored(1,1,0,.8,'\xef\x84\x91')
+                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Low inventory! Inv: '..mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) end
+                    end
 
                 --Name
                 ImGui.TableNextColumn()
