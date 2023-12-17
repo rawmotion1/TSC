@@ -1,3 +1,6 @@
+v2.1.1 2023-12-17
+- Fixed potential GUI crash when zoning.
+
 v2.1.0 2023-12-17
 - Added yellow dot for toons with low inventory.
 - Hovering over dots now shows toons' inventory.

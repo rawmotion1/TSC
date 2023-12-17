@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.1.0'
+local version = '2.1.1'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -2032,7 +2032,8 @@ local function tscWindow()
                 --Cloud
                 ImGui.TableNextColumn()
                     ImGui.AlignTextToFramePadding()
-                    if tonumber(mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) > 49 then
+                    local inv = tonumber(mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) or 0
+                    if inv > 49 then
                         ImGui.TextColored(0,1,0,1,'\xef\x84\x91')
                         if ImGui.IsItemHovered() then ImGui.SetTooltip('Online and in-zone. Inv: '..mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) end
                     else
