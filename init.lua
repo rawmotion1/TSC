@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.1.1'
+local version = '2.1.2'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1984,10 +1984,10 @@ local function tscWindow()
     --Toons table
     local tableFlags = ImGuiTableFlags.ScrollY + ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH
 
-    if ImGui.BeginTable('ToonTable', 6, tableFlags, 600, 250) then
+    if ImGui.BeginTable('ToonTable', 6, tableFlags, ImVec2(600,250)) then
         --Set widths
         ImGui.TableSetupColumn('',columnFlags,10)
-        ImGui.TableSetupColumn('',columnFlags2,0)
+        ImGui.TableSetupColumn('',columnFlags2,100)
         ImGui.TableSetupColumn('',columnFlags,100)
         ImGui.TableSetupColumn('',columnFlags,100)
         ImGui.TableSetupColumn('',columnFlags,100)
@@ -2216,8 +2216,8 @@ local function tscWindow()
     ImGui.SameLine()
 
     --Mules table
-    local muleTableFlags = ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH + ImGuiTableFlags.NoHostExtendX
-    if ImGui.BeginTable('Muletable',2,muleTableFlags, 150, 250) then
+    local muleTableFlags = ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH + ImGuiTableFlags.NoHostExtendX +  ImGuiTableFlags.ScrollY
+    if ImGui.BeginTable('Muletable',2,muleTableFlags, ImVec2(150, 250)) then
         ImGui.TableSetupColumn('Mules', ImGuiTableColumnFlags.WidthStretch)
         ImGui.TableSetupColumn('Inv', ImGuiTableColumnFlags.WidthFixed, 40)
         ImGui.TableSetupScrollFreeze(0, 1) -- Make row always visible
