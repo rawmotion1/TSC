@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.1.2'
+local version = '2.1.3'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1346,7 +1346,7 @@ local function restWindow()
                         ImGui.TableSetupColumn('Global', ImGuiTableColumnFlags.WidthFixed, 90)
                         ImGui.TableSetupColumn('Personal', ImGuiTableColumnFlags.WidthFixed, 90)
                         ImGui.TableHeadersRow()
-                        ImGui.TableSetBgColor(1, 1, 1, 0, .4)
+                        ImGui.TableSetBgColor(1, ImVec4(1, 1, 0, .4))
                         if consol[toon.name] then
 
                             --Alphabetize
@@ -1378,9 +1378,9 @@ local function restWindow()
                                     ImGui.TableNextRow()
                                     ImGui.TableNextColumn()
                                     if row_bg_type == 1 then
-                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, 0.8, 0.8, 0.3, 0.35)
+                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, ImVec4(0.8, 0.8, 0.3, 0.35))
                                     else
-                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, 0.9, 0.9, 0.2, 0.35)
+                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, ImVec4(0.9, 0.9, 0.2, 0.35))
                                     end
 
                                     if consol[toon.name][item] == 'skipped' then
@@ -1466,7 +1466,7 @@ local function matchWindow()
                         ImGui.TableSetupColumn('Global', ImGuiTableColumnFlags.WidthFixed, 90)
                         ImGui.TableSetupColumn('Personal', ImGuiTableColumnFlags.WidthFixed, 90)
                         ImGui.TableHeadersRow()
-                        ImGui.TableSetBgColor(1, 1, 0, 0, .4)
+                        ImGui.TableSetBgColor(1, ImVec4(1, 0, 0, .4))
                         if matches[toon.name] then
                             
                             --Alphabetize
@@ -1506,9 +1506,9 @@ local function matchWindow()
                                 ImGui.TableNextRow()
                                 ImGui.TableNextColumn()
                                 if row_bg_type == 1 then
-                                    ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, 0.8, 0.3, 0.3, 0.35)
+                                    ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, ImVec4(0.8, 0.3, 0.3, 0.35))
                                 else
-                                    ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, 0.9, 0.2, 0.2, 0.35)
+                                    ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, ImVec4(0.9, 0.2, 0.2, 0.35))
                                 end
 
                                 if matches[toon.name][item] == 'ignored' then
@@ -1558,7 +1558,7 @@ local function matchWindow()
                         ImGui.TableSetupColumn('Global', ImGuiTableColumnFlags.WidthFixed, 90)
                         ImGui.TableSetupColumn('Personal', ImGuiTableColumnFlags.WidthFixed, 90)
                         ImGui.TableHeadersRow()
-                        ImGui.TableSetBgColor(1, 0, 0, 1, .6)
+                        ImGui.TableSetBgColor(1, ImVec4(0, 0, 1, .6))
                         if consol[toon.name] then
 
                             --Alphabetize
@@ -1598,9 +1598,9 @@ local function matchWindow()
                                     ImGui.TableNextRow()
                                     ImGui.TableNextColumn()
                                     if row_bg_type == 1 then
-                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, 0.3, 0.3, 0.8, 0.35)
+                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, ImVec4(0.3, 0.3, 0.8, 0.35))
                                     else
-                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, 0.2, 0.2, 0.9, 0.35)
+                                        ImGui.TableSetBgColor(ImGuiTableBgTarget.RowBg0 + row_bg_target, ImVec4(0.2, 0.2, 0.9, 0.35))
                                     end
                                     if consol[toon.name][item] == 'ignored' then
                                         ImGui.TextDisabled(item..' is now globally ignored')
@@ -2080,7 +2080,7 @@ local function tscWindow()
                     ImGui.PushStyleColor(ImGuiCol.Button, 0, .5, 0, .75)
                         if ImGui.Button('Tidy up##'..toon.name,100,20) then ImGui.OpenPopup('Tidy up confirmation##'..toon.name) end
                     ImGui.PopStyleColor()
-                        ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
+                        ImGui.SetNextWindowSize(400, 170, ImGuiCond.Appearing)
                         if ImGui.BeginPopupModal('Tidy up confirmation##'..toon.name, nil, ImGuiWindowFlags.AlwaysAutoResize) then
                             ImGui.TextColored(1,1,0,1,'Ready?')
                             ImGui.Text('Item mode:')
@@ -2124,7 +2124,7 @@ local function tscWindow()
                         end
 
                         --Give confirmation modal
-                        ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
+                        ImGui.SetNextWindowSize(400, 120, ImGuiCond.Appearing)
                         if ImGui.BeginPopupModal('Give confirmation##'..toon.name, nil, ImGuiWindowFlags.AlwaysAutoResize) then
                             ImGui.TextColored(1,1,0,1,'Ready?')
                             ImGui.Text('Item mode:')
@@ -2288,7 +2288,7 @@ local function tscWindow()
     ImGui.SameLine()
 
     --Consolidate all confirmation modal
-    ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
+    ImGui.SetNextWindowSize(400, 155, ImGuiCond.Appearing)
     if ImGui.BeginPopupModal('Consolidate confirmation', nil, ImGuiWindowFlags.AlwaysAutoResize) then
         ImGui.TextColored(1,1,0,1, 'Ready?')
         ImGui.Text('Item mode:')
