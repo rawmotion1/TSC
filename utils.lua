@@ -228,7 +228,7 @@ function utils.scan(items, ignore, what, realestate)
         end
 
         if skip == false then
-            if item.NoDrop() or item.Container() ~= 0 or not item.Stackable() or item.Lore() then
+            if item.NoDrop() or item.Container() ~= 0 or not item.Stackable() or item.Lore() or item.NoRent() then
                 skip = true
             end
         end
