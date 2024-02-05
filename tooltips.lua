@@ -9,7 +9,7 @@ tip.art = "Set one toon as artisan to ensure they always win on items in your ar
 
 tip.hoardlist = "Manage the list of items you want your artisan to always win and never give away."
 
-tip.self = "Consolidate this toon's items across inv, bank, depot, and plots. No trading unless you have leftovers enabled."
+tip.self = "Make this toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. No trading unless you have leftovers enabled."
 
 tip.mode = "When toons have the same item, the default is to give to the one with most. Generous and greedy modes override this: a greedy toon wins even with fewer items, while a generous one gives away despite having more."
 
@@ -44,4 +44,6 @@ tip.confirmself = " will self-consolidate, which may involve banking, and droppi
 tip.goall = 'Make sure your settings are the way you want them before proceeding. And make sure everyone is easy to navigate to and there is a banker nearby.'
 
 tip.depotwarning = 'To deposit items into the tradeskill depot, TSC will take over your mouse and change focus to each toon\'s EQ window. You won\'t be able to use your PC while this is happening. Please confirm that you are ready.'
+
+tip.tidyall = 'Make every toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. Then, run leftovers.'
 return tip

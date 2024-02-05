@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.1.4'
+local version = '2.2.0'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -426,11 +426,20 @@ local movers --Depot and bank to depot
 local dumpers
 local ploters
 local waitingMatches
-local function stopWaitingMatching() waitingMatches = false end
-local function match(who)
+local matchCount
+local function stopWaitingMatching() waitingMatches = false matchCount = matchCount + 1 end
+local function match(who, all)
     status = 'Finding matches'
     if who then
-        if who == me then
+        if all == 'all' then
+            for _,toon in pairs(who) do
+                if toon.name == me then
+                    mq.cmd('/lua run TSC/selfmatch.lua')
+                else
+                    mq.cmdf('/dex %s /lua run TSC/selfmatch', toon.name)
+                end
+            end
+        elseif who == me then
             mq.cmd('/lua run TSC/selfmatch.lua')
         else
             mq.cmdf('/dex %s /lua run TSC/selfmatch', who)
@@ -439,9 +448,18 @@ local function match(who)
         mq.cmd('/lua run TSC/match.lua')
     end
 
-    waitingMatches = true
-    while waitingMatches do
-        whileWaiting()
+    if all == 'all' then
+        local length = utils.listSize(who)
+        matchCount = 0
+        while matchCount < length do
+            whileWaiting()
+        end
+        matchCount = 0
+    else
+        waitingMatches = true
+        while waitingMatches do
+            whileWaiting()
+        end
     end
 
     mq.delay(2000)
@@ -451,6 +469,25 @@ local function match(who)
         print('\at[TsC]\ao Error loading matches.lua')
     elseif matchlist then
         matches = matchlist()
+    end
+
+    if all == 'all' then
+        local allConsol = {}
+        local allitems = {}
+        for _,toon in pairs(who) do
+            if mq.TLO.Spawn('PC ='..toon.name)() then --Only load results of toons in-zone
+                local path = 'TSC/tmp/consolidate_'..toon.name..'.lua'
+                local table, error = loadfile(mq.configDir..'/'..path)
+                if error then
+                    print('error')
+                elseif table then
+                    --allitems[toon.name] = {}
+                    local tmpConsol = table()
+                    allConsol[toon.name] = tmpConsol[toon.name]
+                end
+            end
+        end
+        mq.pickle(consolPath, allConsol)
     end
 
     local consollist, consolError = loadfile(mq.configDir..'/'..consolPath)
@@ -875,10 +912,17 @@ local function self(who, what)
     if status ~= 'Idle' then return end
     if utils.checkBanker() == false then return end
 
-
+    local all = false
+    if who == 'all' then
+        all = true
+    end
 
     --Turn into single-entry table
-    who = checkName(who)
+    if all == true then
+        who = toons
+    else
+        who = checkName(who)
+    end
 
     pause(who)
 
@@ -888,7 +932,11 @@ local function self(who, what)
     if what == 'Collectibles' then scan(who,1,19) else scan(who) end
 
     --Determine moves and trades
-    match(who[1].name)
+    if all == true then
+        match(who, 'all')
+    else
+        match(who[1].name)
+    end
 
     --Wait for bank confirmation
     continue = false
@@ -920,7 +968,11 @@ local function self(who, what)
     --Calculate stats
     if settings.stats == true then calcStats(who, what) end
 
-    print('\at[TsC] \ar'..who[1].name..'\'s \ao self-consolidation is done.')
+    if all == true then
+        print('\at[TsC] \arAll toon\'s \ao self-consolidation is done.')
+    else
+        print('\at[TsC] \ar'..who[1].name..'\'s \ao self-consolidation is done.')
+    end
     unpause()
 
     --Reset parameters for GUI
@@ -2079,6 +2131,7 @@ local function tscWindow()
                 ImGui.TableNextColumn()
                     ImGui.PushStyleColor(ImGuiCol.Button, 0, .5, 0, .75)
                         if ImGui.Button('Tidy up##'..toon.name,100,20) then ImGui.OpenPopup('Tidy up confirmation##'..toon.name) end
+                        if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.self) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
                     ImGui.PopStyleColor()
                         ImGui.SetNextWindowSize(400, 170, ImGuiCond.Appearing)
                         if ImGui.BeginPopupModal('Tidy up confirmation##'..toon.name, nil, ImGuiWindowFlags.AlwaysAutoResize) then
@@ -2275,10 +2328,34 @@ local function tscWindow()
 
     --Go button
     ImGui.PushStyleColor(ImGuiCol.Button, 0, 1, 0, .5)
-        if ImGui.Button('Consolidate all', 150,0) then ImGui.OpenPopup('Consolidate confirmation') end
+        if ImGui.Button('Consolidate all') then ImGui.OpenPopup('Consolidate confirmation') end
     ImGui.PopStyleColor()
     if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.go) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
+    
+    --Tidy-up all button
+    ImGui.PushStyleColor(ImGuiCol.Button, 0, .5, 0, .75)
+        if ImGui.Button('Tidy up all') then ImGui.OpenPopup('Tidy up ALL confirmation##all') end
+        if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.tidyall) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
+    ImGui.PopStyleColor()
+    ImGui.SetNextWindowSize(400, 170, ImGuiCond.Appearing)
+    if ImGui.BeginPopupModal('Tidy up ALL confirmation##all', nil, ImGuiWindowFlags.AlwaysAutoResize) then
+        ImGui.TextColored(1,1,0,1,'Ready?')
+        ImGui.Text('Item mode:')
+        ImGui.SameLine()
+        ImGui.TextColored(0,1,0,1, itemMode)
+        ImGui.TextWrapped('All toons'..tip.confirmself)
+        ImGui.PushStyleColor(ImGuiCol.Button, 0,1,0,.5)
+            if ImGui.Button('Tidy up all') then allSelfNow = true ImGui.CloseCurrentPopup() end
+        ImGui.PopStyleColor()
+        ImGui.SameLine()
+        ImGui.PushStyleColor(ImGuiCol.Button, 1,0,0,.5)
+            if ImGui.Button('Cancel') then ImGui.CloseCurrentPopup() end
+        ImGui.PopStyleColor()
+    ImGui.EndPopup()
+    end
+    ImGui.SameLine()
+
 
     --Stop button
     ImGui.PushStyleColor(ImGuiCol.Button, 1, 0, 0, .5)
@@ -2361,6 +2438,7 @@ while openGui do
     whileWaiting()
     if goNow == true then goNow = false go(itemMode) end
     if selfNow == true then selfNow = false self(activeToon, itemMode) end
+    if allSelfNow == true then allSelfNow = false self('all', itemMode) end
     if giveNow == true then giveNow = false give(activeToon, giveTarget, itemMode, giveBank, giveDepot) end
     mq.delay(100)
 end

@@ -6,7 +6,7 @@ local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
 local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
-local consolPath = 'TSC/tmp/consolidate.lua'
+local consolPath = 'TSC/tmp/consolidate_'..me..'.lua'
 
 local settings = {}
 local items = {}
