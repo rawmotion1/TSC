@@ -1,12 +1,20 @@
 --- @type Mq
 local mq = require('mq')
 local utils = require('utils')
+local args = {...}
+local mode = args[1]
 
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
 local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
-local consolPath = 'TSC/tmp/consolidate_'..me..'.lua'
+local consolPath
+
+if mode == 'multiple' then
+    consolPath = 'TSC/tmp/consolidate_'..me..'.lua'
+else
+    consolPath = 'TSC/tmp/consolidate.lua'
+end
 
 local settings = {}
 local items = {}

@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.2.0'
+local version = '2.2.1'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -426,7 +426,7 @@ local movers --Depot and bank to depot
 local dumpers
 local ploters
 local waitingMatches
-local matchCount
+local matchCount = 0
 local function stopWaitingMatching() waitingMatches = false matchCount = matchCount + 1 end
 local function match(who, all)
     status = 'Finding matches'
@@ -434,9 +434,9 @@ local function match(who, all)
         if all == 'all' then
             for _,toon in pairs(who) do
                 if toon.name == me then
-                    mq.cmd('/lua run TSC/selfmatch.lua')
+                    mq.cmd('/lua run TSC/selfmatch.lua multiple')
                 else
-                    mq.cmdf('/dex %s /lua run TSC/selfmatch', toon.name)
+                    mq.cmdf('/dex %s /lua run TSC/selfmatch multiple', toon.name)
                 end
             end
         elseif who == me then

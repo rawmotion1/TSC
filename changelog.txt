@@ -1,3 +1,6 @@
+v2.2.1 2024-02-08
+- Squashed tidy up bugs from last update
+
 v2.2.0 2024-02-05
 - By popular request, added a "Tidy All" feature
 
