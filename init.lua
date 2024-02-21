@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.2.1'
+local version = '2.2.2'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -2087,10 +2087,10 @@ local function tscWindow()
                     local inv = tonumber(mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) or 0
                     if inv > 49 then
                         ImGui.TextColored(0,1,0,1,'\xef\x84\x91')
-                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Online and in-zone. Inv: '..mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) end
+                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Online and in-zone. Inv: '..inv) end
                     else
                         ImGui.TextColored(1,1,0,.8,'\xef\x84\x91')
-                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Low inventory! Inv: '..mq.TLO.DanNet(toon.name).O('Me.FreeInventory')()) end
+                        if ImGui.IsItemHovered() then ImGui.SetTooltip('Low inventory! Inv: '..inv) end
                     end
 
                 --Name

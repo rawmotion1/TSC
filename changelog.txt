@@ -1,3 +1,6 @@
+v2.2.2 2024-02-21
+- Added nil check for inventories
+
 v2.2.1 2024-02-08
 - Squashed tidy up bugs from last update
 
