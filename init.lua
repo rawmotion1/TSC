@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.2.2'
+local version = '2.2.3'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1960,7 +1960,7 @@ local function tscWindow()
 
     --Depot warning modal
     if depotWarning == true then ImGui.OpenPopup('Window Focus Warning') end
-    ImGui.SetNextWindowSize(400, 200, ImGuiCond.Appearing)
+    ImGui.SetNextWindowSize(400, 0, ImGuiCond.Appearing)
     if ImGui.BeginPopupModal('Window Focus Warning', nil, ImGuiWindowFlags.AlwaysAutoResize) then
         ImGui.TextColored(1,1,0,1,'WARNING!')
         ImGui.TextWrapped(tip.depotwarning)
