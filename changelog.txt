@@ -1,3 +1,6 @@
+v2.3.0 2024-09-29
+- Added a full-auto mode to skip all confirmation boxes
+
 v2.2.3 2024-04-17
 - Minor cosmetic fix
 

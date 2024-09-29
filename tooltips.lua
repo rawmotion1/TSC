@@ -46,4 +46,6 @@ tip.goall = 'Make sure your settings are the way you want them before proceeding
 tip.depotwarning = 'To deposit items into the tradeskill depot, TSC will take over your mouse and change focus to each toon\'s EQ window. You won\'t be able to use your PC while this is happening. Please confirm that you are ready.'
 
 tip.tidyall = 'Make every toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. Then, run leftovers.'
+
+tip.fullauto = 'Skip all confirmation dialogs. WARNGING: Only use this if you know exactly what you\'re doing!'
 return tip

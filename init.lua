@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.2.3'
+local version = '2.3.0'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -32,7 +32,7 @@ local consol = {}
 local function createFiles(file)
 
     if file == 'settings' then
-        settings = { ['tiebreaker'] = 'Not set', ['artisan'] = 'Not set', ['stats'] = true, ['includePlots'] = false, ['preferPlots'] = false, ['mules'] = {}, ['driver'] = '' }
+        settings = { ['tiebreaker'] = 'Not set', ['artisan'] = 'Not set', ['stats'] = true, ['includePlots'] = false, ['preferPlots'] = false, ['mules'] = {}, ['driver'] = '', ['fullAuto'] = false }
         mq.pickle(settingPath, settings)
         print('\at[TsC]\ao Creating \ayTSC/settings.lua \aoin your config folder.')
     end
@@ -71,6 +71,8 @@ local function loadFiles()
         settings.includePlots = false
     elseif settings.preferPlots == nil then
         settings.preferPlots = false
+    elseif settings.fullAuto == nil then
+        settings.fullAuto = false
     end
 
     local loadToons, toonError = loadfile(mq.configDir..'/'..toonPath)
@@ -524,9 +526,10 @@ local function match(who, all)
         if dump == true then table.insert(dumpers, entry) end
         if list['Real Estate'] == true then table.insert(ploters, entry) end --Add to ploters whether or not plot is destination
     end
-
-    openMatch = true
-    status = 'Awaiting user input'
+    if settings.fullAuto == false then
+        openMatch = true
+        status = 'Awaiting user input'
+    end
 end
 
 
@@ -712,8 +715,10 @@ local function stopwaitingRest() waitingRest = false end
 local function rest(who)
 
     if utils.listSize(who) > 0 then
-        openRest = true
-        status = 'Awaiting user input'
+        if settings.fullAuto == false then
+            openRest = true
+            status = 'Awaiting user input'
+        end
         while openRest == true do
             mq.delay(100)
             if status == 'Idle' then
@@ -727,24 +732,26 @@ local function rest(who)
     print('\at[TsC]\ao------\agStart\ao leftover routine.')
 
     --Should I show depot warning?
-    local show = false
-    for _,toon in pairs(who) do
-        for _,player in pairs(toons) do
-            if player.name == toon.name then
-                if string.match(player.leftovers, "Depot") then --At least 1 toon has depot in their leftovers routine
-                    show = true
+    if settings.fullAuto == false then
+        local show = false
+        for _,toon in pairs(who) do
+            for _,player in pairs(toons) do
+                if player.name == toon.name then
+                    if string.match(player.leftovers, "Depot") then --At least 1 toon has depot in their leftovers routine
+                        show = true
+                    end
                 end
             end
         end
-    end
-    if show == true then
-        depotWarning = true
-        while depotWarning == true do
-            status = "Awaiting user input"
-            mq.delay(1000)
-            if status == 'Idle' then
-                print('\at[TsC]\ay Leftover routine cancelled.')
-                return
+        if show == true then
+            depotWarning = true
+            while depotWarning == true do
+                status = "Awaiting user input"
+                mq.delay(1000)
+                if status == 'Idle' then
+                    print('\at[TsC]\ay Leftover routine cancelled.')
+                    return
+                end
             end
         end
     end
@@ -866,8 +873,10 @@ local function go(what)
     --Wait for confirmation
     continue = false
     skipTrading = false
-    while continue == false do
-        whileWaiting()
+    if settings.fullAuto == false then
+        while continue == false do
+            whileWaiting()
+        end
     end
 
     if skipTrading == false then
@@ -941,8 +950,10 @@ local function self(who, what)
     --Wait for bank confirmation
     continue = false
     skipTrading = false
-    while continue == false do
-        whileWaiting()
+    if settings.fullAuto == false then
+        while continue == false do
+            whileWaiting()
+        end
     end
 
     if skipTrading == false then
@@ -1952,7 +1963,7 @@ local restOptions = {'Off', 'Depot > Bank > Mules', 'Depot > Bank', 'Depot > Mul
 --------------------------------
 --------Draw main window--------
 local function tscWindow()
-    ImGui.SetWindowSize(775,345)
+    ImGui.SetWindowSize(850,345)
     restWindow()
     matchWindow()
     ignoreWindow()
@@ -1977,7 +1988,7 @@ local function tscWindow()
     local tblflags = 0
     local columnFlags2 = ImGuiTableColumnFlags.WidthStretch
     local columnFlags = ImGuiTableColumnFlags.WidthFixed
-    if ImGui.BeginTable('Status', 4, tblflags, 758, 0) then
+    if ImGui.BeginTable('Status', 4, tblflags, 835, 0) then
         --Set widths
         ImGui.TableSetupColumn('',columnFlags2,150)
         ImGui.TableSetupColumn('',columnFlags2,150)
@@ -2036,7 +2047,7 @@ local function tscWindow()
     --Toons table
     local tableFlags = ImGuiTableFlags.ScrollY + ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH
 
-    if ImGui.BeginTable('ToonTable', 6, tableFlags, ImVec2(600,250)) then
+    if ImGui.BeginTable('ToonTable', 6, tableFlags, ImVec2(627,250)) then
         --Set widths
         ImGui.TableSetupColumn('',columnFlags,10)
         ImGui.TableSetupColumn('',columnFlags2,100)
@@ -2130,7 +2141,13 @@ local function tscWindow()
                 --Self-consolidate button
                 ImGui.TableNextColumn()
                     ImGui.PushStyleColor(ImGuiCol.Button, 0, .5, 0, .75)
-                        if ImGui.Button('Tidy up##'..toon.name,100,20) then ImGui.OpenPopup('Tidy up confirmation##'..toon.name) end
+                        if ImGui.Button('Tidy up##'..toon.name,100,20) then 
+                            if settings.fullAuto == false then 
+                                ImGui.OpenPopup('Tidy up confirmation##'..toon.name) 
+                            else
+                                activeToon = toon.name selfNow = true
+                            end
+                        end
                         if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.self) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
                     ImGui.PopStyleColor()
                         ImGui.SetNextWindowSize(400, 170, ImGuiCond.Appearing)
@@ -2172,7 +2189,11 @@ local function tscWindow()
 
                         if ImGui.Button('Start##'..toon.name) then
                             if giveTarget ~= '' then
-                                ImGui.OpenPopup('Give confirmation##'..toon.name)
+                                if settings.fullAuto == false then
+                                    ImGui.OpenPopup('Give confirmation##'..toon.name)
+                                else
+                                    activeToon = toon.name giveNow = true
+                                end
                             end
                         end
 
@@ -2270,7 +2291,7 @@ local function tscWindow()
 
     --Mules table
     local muleTableFlags = ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH + ImGuiTableFlags.NoHostExtendX +  ImGuiTableFlags.ScrollY
-    if ImGui.BeginTable('Muletable',2,muleTableFlags, ImVec2(150, 250)) then
+    if ImGui.BeginTable('Muletable',2,muleTableFlags, ImVec2(198, 250)) then
         ImGui.TableSetupColumn('Mules', ImGuiTableColumnFlags.WidthStretch)
         ImGui.TableSetupColumn('Inv', ImGuiTableColumnFlags.WidthFixed, 40)
         ImGui.TableSetupScrollFreeze(0, 1) -- Make row always visible
@@ -2328,14 +2349,26 @@ local function tscWindow()
 
     --Go button
     ImGui.PushStyleColor(ImGuiCol.Button, 0, 1, 0, .5)
-        if ImGui.Button('Consolidate all') then ImGui.OpenPopup('Consolidate confirmation') end
+        if ImGui.Button('Consolidate all') then 
+            if settings.fullAuto == false then
+                ImGui.OpenPopup('Consolidate confirmation') 
+            else
+                goNow = true
+            end
+        end
     ImGui.PopStyleColor()
     if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.go) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
     
     --Tidy-up all button
     ImGui.PushStyleColor(ImGuiCol.Button, 0, .5, 0, .75)
-        if ImGui.Button('Tidy up all') then ImGui.OpenPopup('Tidy up ALL confirmation##all') end
+        if ImGui.Button('Tidy up all') then 
+            if settings.fullAuto == false then
+                ImGui.OpenPopup('Tidy up ALL confirmation##all') 
+            else
+                allSelfNow = true
+            end
+        end
         if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.tidyall) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.PopStyleColor()
     ImGui.SetNextWindowSize(400, 170, ImGuiCond.Appearing)
@@ -2354,6 +2387,12 @@ local function tscWindow()
         ImGui.PopStyleColor()
     ImGui.EndPopup()
     end
+    ImGui.SameLine()
+
+    local updateFullAuto
+    settings.fullAuto, updateFullAuto = ImGui.Checkbox('Full-auto', settings.fullAuto)
+	if updateFullAuto then utils.switch(settings.fullAuto) save() end
+    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.fullauto) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
 
 
