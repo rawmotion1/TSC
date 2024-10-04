@@ -90,6 +90,7 @@ for toon,items in pairs(allitems) do
             lqtable = lqtable + 1
         end
         qTable[item][toon] = qty.total
+        if qty.depot > 0 then qTable[item][toon] = 99999 end
     end
 end
 
@@ -150,6 +151,8 @@ local function defineTrades()
                         print('\at[TsC]\ag [Artisan] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho is the \ag Artisan')
                     elseif msg == 'tie' then
                         print('\at[TsC]\ag [Tie] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aobecause there was a tie.')
+                    elseif player[receiver] == 99999 then
+                        print('\at[TsC]\ag [Match] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho has \ag this item in their depot')
                     else
                         print('\at[TsC]\ag [Match] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho has \ag'..player[receiver])
                     end

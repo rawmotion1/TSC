@@ -1,3 +1,6 @@
+v2.3.1 2024-10-04
+- New default behavior: If a toon has an item in their depot, they will now win even if qty is lower
+
 v2.3.0 2024-09-29
 - Added a full-auto mode to skip all confirmation boxes
 
