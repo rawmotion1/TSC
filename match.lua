@@ -83,6 +83,7 @@ end
 ---Reformat table for easier comparison
 local lqtable = 0
 local qTable = {}
+local depotTable = {}
 for toon,items in pairs(allitems) do
     for item,qty in pairs(items) do
         if not qTable[item] then
@@ -90,9 +91,23 @@ for toon,items in pairs(allitems) do
             lqtable = lqtable + 1
         end
         qTable[item][toon] = qty.total
-        if qty.depot > 0 then qTable[item][toon] = 99999 end
+
+        
+        if not depotTable[item] then 
+            depotTable[item] = {}
+        end
+        if qty.depot > 0 then
+            depotTable[item][toon] = true
+        else
+            depotTable[item][toon] = false
+        end
+
     end
 end
+local qpath = 'TSC/tmp/qtable.lua'
+    mq.pickle(qpath, qTable)
+    local dpath = 'TSC/tmp/dtable.lua'
+    mq.pickle(dpath, depotTable)
 
 --Add artisan items to qTable
 if isArtisan == true then
@@ -133,10 +148,10 @@ local function defineTrades()
     mq.delay(1000)
 
     for item,player in pairs(qTable) do --Start iterating through items
-
+        depotWin = false
         --Create trade entries function
         local function createEntries(owners,receiver,msg)
-
+            
             for _,owner in pairs(owners) do
                 if owner.name ~= receiver and owner.name ~= 'Artisan' then
                     if not matches[owner.name] then matches[owner.name] = {} end
@@ -151,7 +166,7 @@ local function defineTrades()
                         print('\at[TsC]\ag [Artisan] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho is the \ag Artisan')
                     elseif msg == 'tie' then
                         print('\at[TsC]\ag [Tie] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aobecause there was a tie.')
-                    elseif player[receiver] == 99999 then
+                    elseif depotWin == true then
                         print('\at[TsC]\ag [Match] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho has \ag this item in their depot')
                     else
                         print('\at[TsC]\ag [Match] \ar'..owner.name..'\'s \ag'..owner.qty..' \ay'..item..' \aowill go to \ar'..receiver..' \aowho has \ag'..player[receiver])
@@ -182,21 +197,55 @@ local function defineTrades()
 
         local function findWinner(list,size)
             local winner
-            local highest_qty, name = list[1].qty, list[1].name
-            for i=2, size do
-                if list[i].qty > highest_qty then
-                    highest_qty, name = list[i].qty, list[i].name
+            local depotList = {}
+            local depotLength = 0
+            local depotWinner
+
+            --First check if there is ONE person with the item in their depot and make them the winner
+            for i=1, size do
+                if list[i].depot == true then
+                    depotLength = depotLength + 1
+                    table.insert(depotList, list[i])
+                    depotWinner = list[i].name
                 end
             end
-            winner = name
-            for i=1, size do
-                if list[i].name ~= winner then
-                    if list[i].qty == highest_qty then
-                        winner = 'tie'
+            if depotLength == 1 then
+                winner = depotWinner
+                depotWin = true
+                return winner
+            end
+            ------
+
+            local qtyList
+            local qtySize
+
+            --Find a QTY winner, either from the list of people with the item in their depot, or if there are none, then the original list
+            local function findQTYWinnter(qtyList,qtySize)
+                local highest_qty, name = qtyList[1].qty, qtyList[1].name
+                for i=2, qtySize do
+                    if qtyList[i].qty > highest_qty then
+                        highest_qty, name = qtyList[i].qty, qtyList[i].name
                     end
                 end
+                winner = name
+                for i=1, qtySize do
+                    if qtyList[i].name ~= winner then
+                        if qtyList[i].qty == highest_qty then
+                            winner = 'tie'
+                        end
+                    end
+                end
+                return winner
             end
-            return winner
+
+            if depotLength > 1 then
+                qtyList = depotList
+                qtySize = depotLength
+            else
+                qtyList = list
+                qtySize = size
+            end
+            return findQTYWinnter(qtyList,qtySize)
         end
 
         --Identify this item's owners
@@ -205,7 +254,8 @@ local function defineTrades()
         for name,qty in pairs(qTable[item]) do
             local owner = {
                 name = name,
-                qty = qty
+                qty = qty,
+                depot = depotTable[item][name]
             }
             table.insert(owners, owner)
             low = low + 1
