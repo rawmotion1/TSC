@@ -1,4 +1,4 @@
-v2.3.4 2024-11-15
+v2.4.0 2024-11-15
 - Improvements to the matches decision tree fixing depot priority issues
 
 v2.3.1 2024-10-04
