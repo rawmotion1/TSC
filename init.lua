@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '2.4.0'
+local version = '3.0.0'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -17,6 +17,7 @@ local ignorePath = 'TSC/ignore.lua'
 local artisanPath = 'TSC/artisan.lua'
 local matchesPath = 'TSC/tmp/matches.lua'
 local consolPath = 'TSC/tmp/consolidate.lua'
+local resultPath = 'TSC/tmp/search.lua'
 
 local settings = {}
 local alltoons = {}
@@ -27,6 +28,7 @@ local pignoreList = {}
 local artisan = {}
 local matches = {}
 local consol = {}
+local searchResults = {}
 
 --------Create missing files--------
 local function createFiles(file)
@@ -119,6 +121,7 @@ local function save(who)
     mq.pickle(artisanPath, artisan)
     mq.pickle(matchesPath, matches)
     mq.pickle(consolPath, consol)
+    mq.pickle(resultPath, searchResults)
 end
 
 local function saveToons()
@@ -305,6 +308,7 @@ local openList, drawList = false, false
 local openMatch, drawMatch = false, false
 local openMove, drawMove = false, false
 local openRest, drawRest = false, false
+local openSearch, drawSearch = false, false
 
 
 
@@ -836,11 +840,17 @@ local activeToon = ''
 local giveTarget = ''
 local giveBank = false
 local giveDepot = false
+local deliverTarget = ''
+local deliverItem = ''
+local deliverQty = 1
 local function clearParameters()
     activeToon = ''
     giveTarget = ''
     giveBank = false
     giveDepot = false
+    deliverTarget = ''
+    deliverItem = ''
+    deliverQty = 1
 end
 
 
@@ -910,6 +920,7 @@ local function go(what)
     unpause()
     status = 'Idle'
 end
+
 
 
 --------------------------------
@@ -1048,10 +1059,91 @@ local function doneGiving()
 end
 
 
+----------------------------
+--------Search routine--------
+
+local waitingSearch
+local function stopwaitingSearch() waitingSearch = false end
+local function search(what)
+    --Pre checks
+    if status ~= 'Idle' then return end
+    if utils.checkBanker() == false then return end
+    if utils.listSize(toons) < 1 then print('\at[TsC]\ao Add some toons first.') return end
+
+    --Pause plugins
+    pause(toons)
+
+    if settings.stats == true then
+        createStats(toons)
+    end
+
+    --Scan
+    if what == 'Collectibles' then scan(toons,1,19) else scan(toons) end
+
+
+    --Build results table
+    waitingSearch = true
+    mq.cmd('/squelch /lua run TSC/search')
+    while waitingSearch == true do whileWaiting() end
+
+    local loadSearch, searchError = loadfile(mq.configDir..'/'..resultPath)
+    if searchError then
+        print('\at[TsC]\ao Error loading search.lua')
+    elseif loadSearch then
+        searchResults = loadSearch()
+    end
+
+    print('\at[TsC] \ao Results updated.')
+    openSearch = true
+    unpause()
+    status = 'Idle'
+end
 
 
 
+----------------------------
+--------Deliver routine--------
+local function deliver(who, receiver, what, qty)
+    --Ensure banker is in zone
+    if not utils.checkBanker() then return end
 
+    --Ensure receiver is in-zone
+    receiver = (receiver:gsub("^%l", string.upper))
+    if not mq.TLO.Spawn('PC ='..receiver)() then
+        print('\at[TsC]\ao Target not found in zone. Stopping.')
+        return
+    end
+
+    --Pause toons
+    local pausers = {
+        [1] = {['name'] = who},
+        [2] = {['name'] = receiver}
+    }
+    pause(pausers)
+
+    status = 'Delivering item'
+    print('\at[TsC]\ay '..who..'\ao will deliver \ay'..qty..' '..what..' \ao to \ay'..receiver..'\ao.')
+
+    local type
+    if itemMode == "Tradeskill" then type = 41 else type = 19 end
+
+    if who == me then
+        mq.cmdf('/lua run TSC/deliver "%s" "%s" "%s" "%s"', receiver, what, qty, type)
+    else
+        mq.cmdf('/dex %s /lua run TSC/deliver "%s" "%s" "%s" "%s"', who, receiver, what, qty, type)
+    end
+
+    clearParameters()
+end
+
+local function doneDelivering()
+    unpause()
+    print('\at[TsC]\ao------\arDone\ao delivering item.')
+    local type
+    if itemMode == "Tradeskill" then type = 41 else type = 19 end
+    status = 'Idle'
+    search(type)
+end
 
 
 ---------------------
@@ -1079,6 +1171,10 @@ local function binds(a, b)
         saveStates(a, b)
     elseif a == 'pausedplugin' then
         saveStates(a, b)
+    elseif a == 'donesearching' then
+        stopwaitingSearch()
+    elseif a == 'donedelivering' then
+        doneDelivering()
     end
 end
 mq.bind('/tsc', binds)
@@ -1100,6 +1196,7 @@ mq.bind('/tsc', binds)
 
 ----ANONYMIZOR----
 local function fname(name)
+    
     return name
 end
 
@@ -1107,6 +1204,8 @@ end
 local goNow = false
 local selfNow = false
 local giveNow = false
+local deliverNow = false
+local searchNow = false
 
 
 --Add toons and mules
@@ -1306,6 +1405,33 @@ end
 --Alphabetically sort ignore/artisan list table
 local current_sort_specs = nil
 local function sortBName(a, b)
+    for n = 1, current_sort_specs.SpecsCount, 1 do
+        local sort_spec = current_sort_specs:Specs(n)
+        local delta = 0
+        if a == nil or b == nil then return end
+        a = a:lower()
+        b = b:lower()
+        if a < b then
+            delta = -1
+        elseif b < a then
+            delta = 1
+        else
+            delta = 0
+        end
+        if delta ~= 0 then
+            if sort_spec.SortDirection == ImGuiSortDirection.Ascending then
+                return delta < 0
+            end
+            return delta > 0
+        end
+    end
+    return a < b
+end
+
+--Alphabetically sort search list table
+local function sortSearch(a, b)
+    a = a['item']
+    b = b['item']
     for n = 1, current_sort_specs.SpecsCount, 1 do
         local sort_spec = current_sort_specs:Specs(n)
         local delta = 0
@@ -1926,6 +2052,108 @@ local function artWindow()
     end
 end
 
+--------Draw search window--------
+local search_term = ''
+local function searchWindow()
+    if openSearch then
+        openSearch, drawSearch = ImGui.Begin('Searching all items', openSearch)
+        ImGui.SetWindowSize(500,700,ImGuiCond.Once)
+        if drawSearch then
+
+            if ImGui.Button('Re-scan') then searchNow = true end
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.rescan) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
+            ImGui.SameLine()
+
+            search_term = ImGui.InputText('\xee\xa2\xb6', search_term)
+
+            ImGui.TextWrapped('These are all items owned by your toons in this zone. From here you can instruct toons to give items to others.')
+
+            local tableFlags = ImGuiTableFlags.Sortable + ImGuiTableFlags.RowBg + ImGuiTableFlags.ScrollY
+            local x, y = ImGui.GetContentRegionAvail()
+            if ImGui.BeginTable('SearchTable', 3, tableFlags, x, y) then
+                ImGui.TableSetupColumn('Item', ImGuiTableColumnFlags.WidthStretch, 0, 1)
+                local col2flag = ImGuiTableColumnFlags.NoSort + ImGuiTableColumnFlags.WidthFixed
+                local col3flag = ImGuiTableColumnFlags.NoSort + ImGuiTableColumnFlags.WidthFixed
+                ImGui.TableSetupColumn('Qty', col2flag, 40, 2)
+                ImGui.TableSetupColumn('Give', col3flag, 60, 2)
+                ImGui.TableSetupScrollFreeze(0, 1)
+
+                local sort_specs = ImGui.TableGetSortSpecs()
+                if sort_specs then
+                    if sort_specs.SpecsDirty then
+                        current_sort_specs = sort_specs
+                        table.sort(searchResults, sortSearch)
+                        save()
+                        current_sort_specs = nil
+                        sort_specs.SpecsDirty = false
+                    end
+                end
+                ImGui.TableHeadersRow()
+
+                for k,v in ipairs(searchResults) do
+                    if (#search_term > 1 and string.find(v.item:lower(), search_term:lower())) or #search_term < 2 then
+                    ImGui.TableNextRow()
+                        ImGui.TableNextColumn()
+                            ImGui.TextColored(1,1,0,1, v.item)
+                        ImGui.TableNextColumn()
+                        ImGui.Text('')
+                        ImGui.TableNextColumn()
+                        ImGui.Text('')
+                    ImGui.TableNextRow()
+                        for l,details in pairs(v) do
+                            if l ~= 'item' then
+                                ImGui.TableNextColumn()
+                                ImGui.Indent(15)
+                                ImGui.Text(fname(l))
+                                ImGui.Unindent(15)
+                                ImGui.TableNextColumn()
+                                    ImGui.Text(details.total)
+                                ImGui.TableNextColumn()
+                                    if ImGui.Button('Select...##'..l..v.item, 60,20) then ImGui.OpenPopup('give##'..l..v.item) end
+                                    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.deliver) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
+                                    
+                                    --Deliver pop-up
+                                    if ImGui.BeginPopup('give##'..l..v.item) then
+                                        ImGui.TextColored(1,1,0,1,'Give '..v.item..' to another?')
+                                        ImGui.Text('Who should '..fname(l)..' give to?')
+                                        if ImGui.BeginCombo('##DeliverCombo'..l..v.item, fname(deliverTarget)) then
+                                            for _,peer in pairs(giveComboOptions) do
+                                                if l ~= peer then
+                                                    if ImGui.Selectable(fname(peer), deliverTarget == peer) then
+                                                        deliverTarget = peer
+                                                    end
+                                                end
+                                            end
+                                            ImGui.EndCombo()
+                                        end
+                                        ImGui.Text('How many?')
+                                        deliverQty = ImGui.SliderInt("Quantity##"..l..v.item, deliverQty, 1, details.total)
+
+                                        if ImGui.Button('Start##'..l..v.item) then
+                                            if deliverTarget ~= '' then
+                                                if deliverTarget == l then
+                                                    print('\at[TsC]\ao You can\'t give your yourself!')
+                                                else
+                                                    activeToon = l
+                                                    deliverItem = v.item
+                                                    deliverNow = true
+                                                end
+                                            end
+                                        end
+                                        ImGui.EndPopup()
+                                    end
+
+                            end
+                        end
+                    end
+                end
+            ImGui.EndTable()
+            end
+        end
+        ImGui.End()
+    end
+end
+
 
 --Context menus
 local function toonContext(n, toon)
@@ -1968,6 +2196,7 @@ local function tscWindow()
     matchWindow()
     ignoreWindow()
     artWindow()
+    searchWindow()
 
     --Depot warning modal
     if depotWarning == true then ImGui.OpenPopup('Window Focus Warning') end
@@ -2359,6 +2588,8 @@ local function tscWindow()
     ImGui.PopStyleColor()
     if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.go) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
+
+    
     
     --Tidy-up all button
     ImGui.PushStyleColor(ImGuiCol.Button, 0, .5, 0, .75)
@@ -2387,6 +2618,15 @@ local function tscWindow()
         ImGui.PopStyleColor()
     ImGui.EndPopup()
     end
+    ImGui.SameLine()
+
+    --Search button
+    ImGui.PushStyleColor(ImGuiCol.Button, 1, 1, 0, .5)
+        if ImGui.Button('Search') then 
+            searchNow = true
+        end
+    ImGui.PopStyleColor()
+    if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.search) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
     ImGui.SameLine()
 
     local updateFullAuto
@@ -2479,5 +2719,7 @@ while openGui do
     if selfNow == true then selfNow = false self(activeToon, itemMode) end
     if allSelfNow == true then allSelfNow = false self('all', itemMode) end
     if giveNow == true then giveNow = false give(activeToon, giveTarget, itemMode, giveBank, giveDepot) end
+    if deliverNow == true then deliverNow = false deliver(activeToon, deliverTarget, deliverItem, deliverQty) end
+    if searchNow == true then searchNow = false search(itemMode) end
     mq.delay(100)
 end

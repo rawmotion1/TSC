@@ -48,4 +48,10 @@ tip.depotwarning = 'To deposit items into the tradeskill depot, TSC will take ov
 tip.tidyall = 'Make every toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. Then, run leftovers.'
 
 tip.fullauto = 'Skip all confirmation dialogs. WARNGING: Only use this if you know exactly what you\'re doing!'
+
+tip.rescan = "Re-scan your toons to update the table."
+
+tip.deliver = "Tell this toon to deliver this item to someone else."
+
+tip.search = "Search through all your toons' items and move them around."
 return tip

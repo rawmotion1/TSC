@@ -1,3 +1,6 @@
+v3.0.0 2024-12-01
+- Added a search and deliver feature
+
 v2.4.0 2024-11-15
 - Improvements to the matches decision tree fixing depot priority issues
 

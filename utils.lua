@@ -17,6 +17,8 @@ function utils.stopAll(restart)
     mq.cmd('/dgae /squelch /lua stop TSC/give.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/plots.lua')
     mq.cmd('/dgae /squelch /lua stop TSC/home.lua')
+    mq.cmd('/dgae /squelch /lua stop TSC/search.lua')
+    mq.cmd('/dgae /squelch /lua stop TSC/deliver.lua')
     if restart == true then
         mq.cmd('/lua run TSC/restart')
     end
@@ -430,7 +432,7 @@ function utils.grab(grabList, what, mode)
 
                 else
                     print('\at[TsC]\ao Found \ay'..v..'\ao in row '..i..'\ay but my inventory is full!')
-                    return count, grabList
+                    return count, grabList, true
                 end
             end
         end
@@ -538,7 +540,8 @@ end
 
 
 
-function utils.trade(receiver, list)
+function utils.trade(receiver, list, qty)
+    
     mq.cmdf('/dobserve %s -q Me.FreeInventory', receiver)
     utils.cleanup()
     utils.navTarget(receiver)
@@ -549,56 +552,154 @@ function utils.trade(receiver, list)
     local countTo8 = 0
 
     for item,_ in pairs(list) do
-
+        
         if mq.TLO.FindItemCount('='..item)() > 0 then
 
             if tonumber(mq.TLO.DanNet(receiver).O('Me.FreeInventory')()) > 7 then
+                local stackSize = mq.TLO.FindItem('='..item).StackSize()
 
                 if mq.TLO.Spawn(receiver).Distance() > 20 then
                     utils.navTarget(receiver)
                 end
-
-                for loc, name in pairs(inventory) do
-                    if name == item then
-                        if countTo8 == 0 then print('\at[TsC]\ar '..receiver..' \ao has \ar'..mq.TLO.DanNet(receiver).O('Me.FreeInventory')()..' \ao slots left') end
-
-                        if countTo8 == 8 then --if tradewindow is full, give
-                            repeat
-                                mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
-                                mq.delay(100)
-                                mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
-                                mq.delay(1000)
-                            until not mq.TLO.Window('TradeWnd').Open()
-                            countTo8 = 0
+                
+                if qty then
+                    utils.cleanup()
+                    mq.delay(500)
+                    --Open all bags
+                    
+                    for slot=23, 32 do
+                        if mq.TLO.InvSlot(slot).Item.Container() > 0 then
+                            mq.cmdf('/itemnotify "%s" rightmouseup', slot)
                         end
+                    end
+                    mq.delay(500)
 
+                    if qty <= stackSize then
                         print('\at[TsC]\ao Giving \ay'..item..' \aoto \ar'..receiver)
-
-                        local bag, slot = string.match(loc, "(%d+)-(%d+)")
-                        
-                        if slot then
-                            bag = tonumber(bag) - 22
-                            repeat
-                                mq.cmdf('/shift /itemnotify in pack%s %s leftmouseup', bag, slot)
-                                mq.delay(100)
-                            until mq.TLO.Cursor() ~= nil
-                        else
-                            repeat
-                                mq.cmdf('/shift /itemnotify %s leftmouseup', loc)
-                                mq.delay(100)
-                            until mq.TLO.Cursor() ~= nil
-                        end
-
+                        mq.cmdf('/itemnotify "%s" leftmouseup', item)
+                        mq.delay(500)
+                        mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', qty)
+                        mq.delay(500)
+                        mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
+                        mq.delay(500)
                         if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
                             utils.autoinv()
                             mq.delay(100)
+                            utils.cleanup()
+                            return
                         else
-                            repeat
-                                if mq.TLO.Target.Name() ~= receiver then mq.cmdf('/target "=%s"', receiver) mq.delay(100) end
+                            if mq.TLO.Target.Name() ~= receiver then
+                                mq.cmdf('/target "=%s"', receiver)
+                                mq.delay(100)
+                            end
+                            mq.cmd('/usetarget')
+                            mq.delay(1000)
+                        end
+                        mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
+                        mq.delay(100)
+                        mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
+                        mq.delay(2000)
+                        utils.cleanup()
+                        return
+
+                    else --If qty > stack size
+                        
+                        local given = 0
+                        local remaining = qty
+
+                        repeat
+
+                            if countTo8 == 0 then print('\at[TsC]\ar '..receiver..' \ao has \ar'..mq.TLO.DanNet(receiver).O('Me.FreeInventory')()..' \ao slots left') end
+                            if countTo8 == 8 then --if tradewindow is full, give
+                                repeat
+                                    mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
+                                    mq.delay(100)
+                                    mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
+                                    mq.delay(1000)
+                                until not mq.TLO.Window('TradeWnd').Open()
+                                countTo8 = 0
+                            end
+
+                            print('\at[TsC]\ao Giving \ay'..item..' \aoto \ar'..receiver)
+                            print('remaining '..remaining)
+                            print('stacksize '..stackSize)
+                            if remaining < stackSize then
+                                mq.cmdf('/itemnotify "%s" leftmouseup', item)
+                                mq.delay(500)
+                                mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', remaining)
+                                mq.delay(500)
+                                mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
+                                mq.delay(500)
+                                given = mq.TLO.CursorAttachment.Quantity()
+                            else
+                                mq.cmdf('/shift /itemnotify "%s" leftmouseup', item)
+                                mq.delay(500)
+                                given = mq.TLO.CursorAttachment.Quantity()
+                            end
+                            
+                            if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
+                                utils.autoinv()
+                                mq.delay(100)
+                                return
+                            else
+                                if mq.TLO.Target.Name() ~= receiver then
+                                    mq.cmdf('/target "=%s"', receiver)
+                                    mq.delay(500)
+                                end
                                 mq.cmd('/usetarget')
                                 mq.delay(1000)
-                            until mq.TLO.Cursor() == nil
-                            countTo8 = countTo8 + 1
+                                countTo8 = countTo8 + 1
+                                remaining = remaining - given
+                            end
+                        until remaining == 0 or mq.TLO.FindItemCount('='..item)() == 0
+                        
+                    end
+                    
+
+                else --no qty
+
+                    for loc, name in pairs(inventory) do
+                        if name == item then
+                            if countTo8 == 0 then print('\at[TsC]\ar '..receiver..' \ao has \ar'..mq.TLO.DanNet(receiver).O('Me.FreeInventory')()..' \ao slots left') end
+
+                            if countTo8 == 8 then --if tradewindow is full, give
+                                repeat
+                                    mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
+                                    mq.delay(100)
+                                    mq.cmdf('/dex %s /notify TradeWnd TRDW_Trade_Button leftmouseup', receiver)
+                                    mq.delay(1000)
+                                until not mq.TLO.Window('TradeWnd').Open()
+                                countTo8 = 0
+                            end
+
+                            print('\at[TsC]\ao Giving \ay'..item..' \aoto \ar'..receiver)
+
+                            local bag, slot = string.match(loc, "(%d+)-(%d+)")
+                            
+                            if slot then
+                                bag = tonumber(bag) - 22
+                                repeat
+                                    mq.cmdf('/shift /itemnotify in pack%s %s leftmouseup', bag, slot)
+                                    mq.delay(100)
+                                until mq.TLO.Cursor() ~= nil
+                            else
+                                repeat
+                                    mq.cmdf('/shift /itemnotify %s leftmouseup', loc)
+                                    mq.delay(100)
+                                until mq.TLO.Cursor() ~= nil
+                            end
+
+                            if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
+                                utils.autoinv()
+                                mq.delay(100)
+                            else
+                                repeat
+                                    if mq.TLO.Target.Name() ~= receiver then mq.cmdf('/target "=%s"', receiver) mq.delay(100) end
+                                    mq.cmd('/usetarget')
+                                    mq.delay(1000)
+                                until mq.TLO.Cursor() == nil
+                                countTo8 = countTo8 + 1
+                            end
                         end
                     end
                 end
