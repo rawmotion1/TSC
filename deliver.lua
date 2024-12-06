@@ -134,10 +134,11 @@ local function binds()
     stuck = false
     returnToStart()
 end
+    local function binds2()
+    utils.resume = true
+end
 mq.bind('/tsresume', binds)
-
-
-
+mq.bind('/tscontinue', binds2)
 
 --Where should I grab it from? (cases)
 if inventory >= qty then
@@ -235,3 +236,6 @@ if settings.driver == me then
 else
     mq.cmdf('/dex %s /tsc donedelivering', settings.driver)
 end
+
+mq.unbind('/tscontinue')
+mq.unbind('/tsresume')

@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '3.0.0'
+local version = '3.0.1'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -395,11 +395,11 @@ end
 local scanCount
 local function stopWaitingScanning() scanCount = scanCount + 1 end
 local function scan(who, mode, what)
-    --who: toon table, mode: 1 is normal 2 is givemode, what: 41 is mats 19 is collectibles
+    --who: toon table, mode: 1 is normal 2 is givemode, what: 42 is mats 20 is collectibles
     print('\at[TsC]\ao------\agStart\ao scanning routine.')
 
     if mode == nil then mode = 1 end
-    if what == nil then what = 41 end
+    if what == nil then what = 42 end
 
     local length = utils.listSize(who)
     if length > 0 then
@@ -545,7 +545,7 @@ local function grab(who, what)
 
     print('\at[TsC]\ao------\agStart\ao grabbing routine.')
 
-    if what == nil then what = 41 end
+    if what == nil then what = 42 end
 
     local length = utils.listSize(who)
     if length > 0 then
@@ -613,7 +613,7 @@ local function realEstate(who, what)
 
     print('\at[TsC]\ao------\agStart\ao real estate routine.')
 
-    if what == nil then what = 41 end
+    if what == nil then what = 42 end
 
     local length = utils.listSize(who)
 
@@ -791,7 +791,7 @@ local function calcStats(who, what)
     status = 'Calculating'
     print('\at[TsC]\ao Rescanning to calculate stats...')
 
-    if what == 'Collectibles' then scan(who,1,19) else scan(who) end
+    if what == 'Collectibles' then scan(who,1,20) else scan(who) end
 
     print('\at[TsC]\ao------Approximate results------')
 
@@ -875,7 +875,7 @@ local function go(what)
     end
 
     --Scan
-    if what == 'Collectibles' then scan(toons,1,19) else scan(toons) end
+    if what == 'Collectibles' then scan(toons,1,20) else scan(toons) end
 
     --Determine moves and trades
     match()
@@ -890,14 +890,14 @@ local function go(what)
     end
 
     if skipTrading == false then
-        if what == 'Collectibles' then grab(traders, 19) else grab(traders) end
+        if what == 'Collectibles' then grab(traders, 20) else grab(traders) end
 
         --Execute trades
         trade(traders)
 
         --Handle real-estate
         if settings.includePlots == true then
-            if what == 'Collectibles' then realEstate(ploters, 19) else realEstate(ploters) end
+            if what == 'Collectibles' then realEstate(ploters, 20) else realEstate(ploters) end
         end
 
         --Execute banking
@@ -949,7 +949,7 @@ local function self(who, what)
     createStats(who)
 
     --Scan
-    if what == 'Collectibles' then scan(who,1,19) else scan(who) end
+    if what == 'Collectibles' then scan(who,1,20) else scan(who) end
 
     --Determine moves and trades
     if all == true then
@@ -971,7 +971,7 @@ local function self(who, what)
 
         --Handle real-estate
         if settings.includePlots == true then
-            if what == 'Collectibles' then realEstate(ploters, 19) else realEstate(ploters) end
+            if what == 'Collectibles' then realEstate(ploters, 20) else realEstate(ploters) end
         end
 
         --Execute banking
@@ -1032,7 +1032,7 @@ local function give(who, receiver, what, givebank, givedepot)
     pause(pausers)
 
     --Scan
-    if what == 'Collectibles' then scan(who,1,19) else scan(who) end
+    if what == 'Collectibles' then scan(who,1,20) else scan(who) end
 
 
 
@@ -1078,7 +1078,7 @@ local function search(what)
     end
 
     --Scan
-    if what == 'Collectibles' then scan(toons,1,19) else scan(toons) end
+    if what == 'Collectibles' then scan(toons,1,20) else scan(toons) end
 
 
     --Build results table
@@ -1125,7 +1125,7 @@ local function deliver(who, receiver, what, qty)
     print('\at[TsC]\ay '..who..'\ao will deliver \ay'..qty..' '..what..' \ao to \ay'..receiver..'\ao.')
 
     local type
-    if itemMode == "Tradeskill" then type = 41 else type = 19 end
+    if itemMode == "Tradeskill" then type = 42 else type = 20 end
 
     if who == me then
         mq.cmdf('/lua run TSC/deliver "%s" "%s" "%s" "%s"', receiver, what, qty, type)
@@ -1138,11 +1138,9 @@ end
 
 local function doneDelivering()
     unpause()
-    print('\at[TsC]\ao------\arDone\ao delivering item.')
-    local type
-    if itemMode == "Tradeskill" then type = 41 else type = 19 end
     status = 'Idle'
-    search(type)
+    search(itemMode)
+    print('\at[TsC]\ao------\arDone\ao delivering item.')
 end
 
 

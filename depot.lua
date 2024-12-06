@@ -60,7 +60,7 @@ local move = 0
 local function binds()
     utils.resume = true
 end
-mq.bind('/tsresume', binds)
+mq.bind('/tscontinue', binds)
 
 if mq.TLO.TradeskillDepot.Enabled() then
     if utils.listSize(depotList) > 0 then
@@ -84,4 +84,4 @@ else
     mq.cmdf('/dex %s /tsc donedepot', settings.driver)
 end
 
-mq.unbind('/tsresume')
+mq.unbind('/tscontinue')

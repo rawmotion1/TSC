@@ -88,7 +88,7 @@ function home.go(neigh, plot)
                 while stuck == true do
                     local function stop() return tryAgain end
                     mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \ayis probably stuck on a wall in Sunrise Hills.', mq.TLO.Me.Name())
-                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Get them unstuck, then type \ag/tsresume\ay from their EQ window.')
+                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Get them unstuck, then type \ag/tsproceed\ay from their EQ window.')
                     mq.delay(10000, stop)
                 end
             end
@@ -152,7 +152,7 @@ function home.go(neigh, plot)
                 while stuck == true do
                     local function stop() return tryAgain end
                     mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \ayis probably stuck on a wall in Sunrise Hills.', mq.TLO.Me.Name())
-                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Get them unstuck, then type \ag/tsresume\ay from their EQ window.')
+                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Get them unstuck, then type \ag/tsproceed\ay from their EQ window.')
                     mq.delay(10000, stop)
                 end
             end
@@ -167,7 +167,7 @@ function home.go(neigh, plot)
                 navToPlot()
             end
         end
-        mq.bind('/tsresume', binds)
+        mq.bind('/tsproceed', binds)
 
         --Figure out which is closer: other plot, or spring
         local x,y = string.match(myPlot, '([^,]+),%s([^,]+)')

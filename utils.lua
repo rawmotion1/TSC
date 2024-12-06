@@ -67,7 +67,7 @@ function utils.listSize(who)
     return count
 end
 
-function utils.loadFindWindow(what, scope) --what: 41 is ts mats 19 is collectibles
+function utils.loadFindWindow(what, scope) --what: 42 is ts mats 20 is collectibles
     if what == nil then what = 1 end
     if scope == nil then scope = 1 end
     mq.cmd('/invoke ${Window[FindItemWnd].DoOpen}')
@@ -887,7 +887,7 @@ function utils.depot(depotList, checkSize)
                                 utils.resume = false
                                 while utils.resume == false do
                                     mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \aycan\'t depost. Be sure no Lua windows are obstructing their depot window.', mq.TLO.Me.Name())
-                                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Type \ag/tsresume\ay from the stuck toon\'s EQ window to try again.')
+                                    mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Type \ag/tscontinue\ay from the stuck toon\'s EQ window to try again.')
                                     local function stop()
                                         return utils.resume
                                     end

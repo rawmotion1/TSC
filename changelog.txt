@@ -1,3 +1,7 @@
+v3.0.1 2024-12-06
+- Fixed bug caused by changed to the find window
+- Fixed a bug with duplicate binds
+
 v3.0.0 2024-12-01
 - Added a search and deliver feature
 
