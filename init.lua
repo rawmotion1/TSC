@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '3.0.1'
+local version = '3.0.2'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -2057,12 +2057,16 @@ local function searchWindow()
         openSearch, drawSearch = ImGui.Begin('Searching all items', openSearch)
         ImGui.SetWindowSize(500,700,ImGuiCond.Once)
         if drawSearch then
-
+            ImGui.PushStyleColor(ImGuiCol.Button, 1, 1, 0, .5)
             if ImGui.Button('Re-scan') then searchNow = true end
+            ImGui.PopStyleColor()
             if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.rescan) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
             ImGui.SameLine()
 
+            
             search_term = ImGui.InputText('\xee\xa2\xb6', search_term)
+            ImGui.SameLine()
+            if ImGui.Button("Clear") then search_term = "" end
 
             ImGui.TextWrapped('These are all items owned by your toons in this zone. From here you can instruct toons to give items to others.')
 

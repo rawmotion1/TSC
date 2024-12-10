@@ -1,3 +1,6 @@
+v3.0.2 2024-12-10
+- Added a clear button to the search window
+
 v3.0.1 2024-12-06
 - Fixed bug caused by changed to the find window
 - Fixed a bug with duplicate binds
