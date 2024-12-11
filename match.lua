@@ -105,7 +105,7 @@ for toon,items in pairs(allitems) do
     end
 end
 local qpath = 'TSC/tmp/qtable.lua'
-    mq.pickle(qpath, qTable)
+    
     local dpath = 'TSC/tmp/dtable.lua'
     mq.pickle(dpath, depotTable)
 
@@ -119,7 +119,7 @@ if isArtisan == true then
         end
     end
 end
-
+mq.pickle(qpath, qTable)
 
 --Get modes from toons.lua into a separate table
 local modes = {}
@@ -148,7 +148,7 @@ local function defineTrades()
     mq.delay(1000)
 
     for item,player in pairs(qTable) do --Start iterating through items
-        depotWin = false
+        local depotWin = false
         --Create trade entries function
         local function createEntries(owners,receiver,msg)
             
@@ -252,11 +252,20 @@ local function defineTrades()
         local owners = {}
         local low = 0
         for name,qty in pairs(qTable[item]) do
-            local owner = {
-                name = name,
-                qty = qty,
-                depot = depotTable[item][name]
-            }
+            local owner = {}
+            if name == 'Artisan' then
+                owner = {
+                    name = name,
+                    qty = qty,
+                    depot = false
+                }
+            else
+                owner = {
+                    name = name,
+                    qty = qty,
+                    depot = depotTable[item][name]
+                }
+            end
             table.insert(owners, owner)
             low = low + 1
         end

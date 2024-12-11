@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '3.0.2'
+local version = '3.0.3'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'

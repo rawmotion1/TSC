@@ -14,9 +14,16 @@ if depot == 'true' then depot = true end
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
 local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
+local toonPath = 'TSC/toons.lua'
+local artisanPath = 'TSC/artisan.lua'
 
 local settings = {}
 local items = {}
+
+local toons = {}
+local artList = {}
+local isArtisan = false
+local artisan
 
 local function loadfiles()
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
@@ -33,6 +40,27 @@ local function loadfiles()
     elseif allitems then
         items = allitems()
     end
+
+    local loadToons, toonError = loadfile(mq.configDir..'/'..toonPath)
+    if toonError then
+        print('\at[TsC]\ao Error loading toons.lua')
+        mq.exit()
+    elseif loadToons then
+        toons = loadToons()
+    end
+
+    local loadArt, artError = loadfile(mq.configDir..'/'..artisanPath)
+    if artError then
+        --Nothing
+    elseif loadArt then
+        for _,toon in pairs(toons) do
+            if toon.name == settings.artisan then
+                isArtisan = true
+                artisan = settings.artisan
+                artList = loadArt()
+            end
+        end
+    end
 end
 loadfiles()
 
@@ -45,6 +73,17 @@ if utils.listSize(items) == 0 then
         mq.cmdf('/dex %s /tsc donegiving', settings.driver)
     end
     mq.exit()
+end
+
+--Remove artisan items from list
+if isArtisan == true and artisan == me then
+    for _,v in pairs(artList) do
+        for l,_ in pairs(items) do
+            if l == v then
+                items[l] = nil
+            end
+        end
+    end
 end
 
 local full

@@ -1,3 +1,7 @@
+v3.0.3 2024-12-11
+- Give utility now respects artisan list
+- Fixed miscellaneous bugs
+
 v3.0.2 2024-12-10
 - Added a clear button to the search window
 
