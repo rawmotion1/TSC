@@ -1,3 +1,7 @@
+v3.1.0 2024-12-22
+- Adjusted window size
+- Added inv column for toons
+
 v3.0.3 2024-12-11
 - Give utility now respects artisan list
 - Fixed miscellaneous bugs

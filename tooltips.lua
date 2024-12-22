@@ -54,4 +54,6 @@ tip.rescan = "Re-scan your toons to update the table."
 tip.deliver = "Tell this toon to deliver this item to someone else."
 
 tip.search = "Search through all your toons' items and move them around."
+
+tip.inv = "Number of free inventory slots this toon currently has."
 return tip

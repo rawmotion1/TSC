@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '3.0.3'
+local version = '3.1.0'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -2193,7 +2193,7 @@ local restOptions = {'Off', 'Depot > Bank > Mules', 'Depot > Bank', 'Depot > Mul
 --------------------------------
 --------Draw main window--------
 local function tscWindow()
-    ImGui.SetWindowSize(850,345)
+    ImGui.SetWindowSize(960,365)
     restWindow()
     matchWindow()
     ignoreWindow()
@@ -2219,7 +2219,7 @@ local function tscWindow()
     local tblflags = 0
     local columnFlags2 = ImGuiTableColumnFlags.WidthStretch
     local columnFlags = ImGuiTableColumnFlags.WidthFixed
-    if ImGui.BeginTable('Status', 4, tblflags, 835, 0) then
+    if ImGui.BeginTable('Status', 4, tblflags, 944, 0) then
         --Set widths
         ImGui.TableSetupColumn('',columnFlags2,150)
         ImGui.TableSetupColumn('',columnFlags2,150)
@@ -2278,14 +2278,15 @@ local function tscWindow()
     --Toons table
     local tableFlags = ImGuiTableFlags.ScrollY + ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH
 
-    if ImGui.BeginTable('ToonTable', 6, tableFlags, ImVec2(627,250)) then
+    if ImGui.BeginTable('ToonTable', 7, tableFlags, ImVec2(687,270)) then
         --Set widths
         ImGui.TableSetupColumn('',columnFlags,10)
-        ImGui.TableSetupColumn('',columnFlags2,100)
+        ImGui.TableSetupColumn('',columnFlags2,120)
         ImGui.TableSetupColumn('',columnFlags,100)
         ImGui.TableSetupColumn('',columnFlags,100)
         ImGui.TableSetupColumn('',columnFlags,100)
         ImGui.TableSetupColumn('',columnFlags,100)
+        ImGui.TableSetupColumn('',columnFlags,40)
 
         --Header row
         ImGui.TableNextRow()
@@ -2308,6 +2309,10 @@ local function tscWindow()
         ImGui.TableNextColumn()
             ImGui.TextColored(1,1,0,1,'Give')
             if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.give) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
+
+        ImGui.TableNextColumn()
+            ImGui.TextColored(1,1,0,1,'Inv')
+            if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.inv) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
 
        --ImGui.TableSetupScrollFreeze(0, 1) -- causes crash for some reason
 
@@ -2468,6 +2473,14 @@ local function tscWindow()
                         if update2 then utils.switch(giveDepot) end
                     ImGui.EndPopup()
                     end
+
+                ImGui.TableNextColumn()
+                    local toonInv = mq.TLO.DanNet(toon.name).O('Me.FreeInventory')() or '0'
+                    if mq.TLO.Spawn('PC ='..toon.name)() then
+                        ImGui.TextColored(1,1,1,1, toonInv)
+                    else
+                        ImGui.TextDisabled(toonInv)
+                    end
             end
         end
         --End in-zone toons
@@ -2522,7 +2535,7 @@ local function tscWindow()
 
     --Mules table
     local muleTableFlags = ImGuiTableFlags.BordersOuterV + ImGuiTableFlags.RowBg + ImGuiTableFlags.BordersOuterH + ImGuiTableFlags.NoHostExtendX +  ImGuiTableFlags.ScrollY
-    if ImGui.BeginTable('Muletable',2,muleTableFlags, ImVec2(198, 250)) then
+    if ImGui.BeginTable('Muletable',2,muleTableFlags, ImVec2(248, 270)) then
         ImGui.TableSetupColumn('Mules', ImGuiTableColumnFlags.WidthStretch)
         ImGui.TableSetupColumn('Inv', ImGuiTableColumnFlags.WidthFixed, 40)
         ImGui.TableSetupScrollFreeze(0, 1) -- Make row always visible
@@ -2624,7 +2637,7 @@ local function tscWindow()
 
     --Search button
     ImGui.PushStyleColor(ImGuiCol.Button, 1, 1, 0, .5)
-        if ImGui.Button('Search') then 
+        if ImGui.Button('Search & Deliver') then 
             searchNow = true
         end
     ImGui.PopStyleColor()
