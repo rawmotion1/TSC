@@ -1,3 +1,6 @@
+v3.1.1 2024-12-28
+- Transferring from bank to depot works again
+
 v3.1.0 2024-12-22
 - Adjusted window size
 - Added inv column for toons

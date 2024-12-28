@@ -923,7 +923,7 @@ end
 function utils.bankToDepot(bankToDepotList)
     utils.cleanup()
     print('\at[TsC]\ao Moving items from the bank to your depot.')
-    utils.grab(bankToDepotList, 41, 3)
+    utils.grab(bankToDepotList, 42, 3)
 
     local move = utils.depot(bankToDepotList, false)
     utils.cleanup()
