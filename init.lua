@@ -8,7 +8,7 @@ PackageMan.Require('luafilesystem', 'lfs')
 
 local tip = require('tooltips')
 local filedialog = require('imguifiledialog')
-local version = '3.1.1'
+local version = '3.2.0'
 local me = mq.TLO.Me.Name()
 
 local settingPath = 'TSC/settings.lua'
@@ -1139,8 +1139,21 @@ end
 local function doneDelivering()
     unpause()
     status = 'Idle'
-    search(itemMode)
+    --search(itemMode)
+     --Build results table
+     waitingSearch = true
+     mq.cmd('/squelch /lua run TSC/search')
+     while waitingSearch == true do whileWaiting() end
+ 
+     local loadSearch, searchError = loadfile(mq.configDir..'/'..resultPath)
+     if searchError then
+         print('\at[TsC]\ao Error loading search.lua')
+     elseif loadSearch then
+         searchResults = loadSearch()
+     end
+    openSearch = true
     print('\at[TsC]\ao------\arDone\ao delivering item.')
+    print('\at[TsC] \ao Results updated.')
 end
 
 

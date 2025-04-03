@@ -1,3 +1,8 @@
+v3.2.0 2025-04-03
+- Improved item search & deliver
+- Now only grabs precice amount
+- No longer requires a rescan after trading
+
 v3.1.1 2024-12-28
 - Transferring from bank to depot works again
 

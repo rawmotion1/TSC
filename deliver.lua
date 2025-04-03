@@ -2,22 +2,27 @@
 local mq = require('mq')
 local utils = require('utils')
 local home = require('home')
+local returnZone = require('return')
 
 local args = {...}
 
 local receiver = args[1]
 local item = args[2]
 local qty = tonumber(args[3])
-local what = tonumber(args[4]) -- 41 for mats, 19 for collectibles
+local what = tonumber(args[4]) -- 42 for mats, 20 for collectibles
 
 local me = mq.TLO.Me.Name()
 local startZone = mq.TLO.Zone.ShortName()
 
 local items = {}
+local receiverItems = {}
 local settings = {}
 
+
 local itemsPath = 'TSC/tmp/allitems_'..me..'.lua'
+local receiverPath = 'TSC/tmp/allitems_'..receiver..'.lua'
 local settingPath = 'TSC/settings.lua'
+
 
 local function loadfiles()
     local allitems, itemerror = loadfile(mq.configDir..'/'..itemsPath)
@@ -27,8 +32,16 @@ local function loadfiles()
     elseif allitems then
         items = allitems()
     end
+    local recItems, recItemerror = loadfile(mq.configDir..'/'..receiverPath)
+    if recItemerror then
+        print('\at[TsC]\ao Error loading allitems_'..receiver..'.lua')
+        mq.exit()
+    elseif recItems then
+        receiverItems = recItems()
+    end
     local loadSettings, setError = loadfile(mq.configDir..'/'..settingPath)
     if setError then
+        print('\at[TsC]\ao Error loading settings.lua')
         mq.exit()
     elseif loadSettings then
         settings = loadSettings()
@@ -36,22 +49,29 @@ local function loadfiles()
 end
 loadfiles()
 
-local all = false
-if qty == items[item]['total'] then all = true end
-
 local tradeList = {[item] = 0}
 local grabList = {[1] = item}
 
 ----Where is the item stored?
 local inventory = 0
-for k,v in pairs (items[item]['inventory']) do
+local bank = 0
+local depot = 0
+local plots = 0
+
+for _,v in pairs (items[item]['inventory']) do
     inventory = inventory + v
 end
 
-local plotLocations = {}
-local plots = 0
+for _,v in pairs (items[item]['bank']) do
+    bank = bank + v
+end
+
+depot = items[item]['depot']
+
+local plotLocations = {} --Every plot location that contains the item
+
 for plot,q in pairs (items[item]['plots']) do
-    plots = plots + q --total qty across plots
+    plots = plots + q
     local place = string.match(plot, "^([^,]+,[^,]+)")
     local skip = false
     for _,loc in pairs(plotLocations) do
@@ -62,173 +82,86 @@ for plot,q in pairs (items[item]['plots']) do
     end
 end
 
-local bank = 0
-for k,v in pairs (items[item]['bank']) do
-    bank = bank + v
-end
-
-local depot = items[item]['depot']
-
-local bankDepot = bank + depot
 ----------------------------
 
-
-
-local full
-local mustRepeat
-local invFull
-local thisQty
-local function give()
-    _, _, invFull = utils.grab(grabList, what)
-    if invFull == true and mq.TLO.FindItemCount('='..item)() < qty then --My inventory was full and I couldn't grab everything. I will have to repeat the cycle.
-        mustRepeat = true
-    else --I grabbed everything. No need for further repetitions.
-        mustRepeat = false
-    end
-    thisQty = qty - mq.TLO.FindItemCount('='..item)()
-    if all == true then
-        _, _, full = utils.trade(receiver, tradeList)
+local function updateResults() --Update search results after trading
+    if receiverItems[item] then
+        receiverItems[item]['total'] = receiverItems[item]['total'] + qty
     else
-        _, _, full = utils.trade(receiver, tradeList, qty)
+        receiverItems[item] = {
+            ['bank'] = {},
+            ['inventory'] = {},
+            ['plots'] = {},
+            ['depot'] = 0,
+            ['total'] = qty,
+            ['locations'] = 1,
+            ['destination'] = '',
+        }
     end
-    if full == true then --Target's inventory is full, cancel any repeats.
-        mustRepeat = false
-    end
-    if mustRepeat == true then
-        qty = thisQty
-        tradeList = {[item] = 0}
-        give()
-    end
+    items[item]['total'] = items[item]['total'] - qty
+    mq.pickle(itemsPath, items)
+    mq.pickle(receiverPath, receiverItems)
+    mq.cmd('/squelch /lua run TSC/search')
 end
 
-
-local stuck = false
-local tryAgain = false
-local function returnToStart()
-    mq.cmdf('/travelto %s', startZone)
-    print('\at[TsC]\ao Returning to \ay'..startZone..'\ao.')
-
-    local startx, starty, endx, endy, diffx, diffy
-    while mq.TLO.Navigation.Active() and mq.TLO.Zone.ShortName() == 'neighborhood' do
-        startx, starty = mq.TLO.Me.X(), mq.TLO.Me.Y()
-        mq.delay(5000)
-        endx, endy = mq.TLO.Me.X(), mq.TLO.Me.Y()
-        diffx, diffy = math.abs(endx - startx), math.abs(endy - starty)
-        if diffx < 5 and diffy < 5 then
-            stuck = true
-        end
-        while stuck == true do
-            local function stop() return tryAgain end
-            mq.cmdf('/dgt \at[TsC] \ag:::ALERT::: \ar %s \ayis probably stuck on a wall in Sunrise Hills.', mq.TLO.Me.Name())
-            mq.cmdf('/dgt \at[TsC] \ag:::ALERT:::\ay Get them unstuck, then type \ag/tsresume\ay from their EQ window.')
-            mq.delay(10000, stop)
-        end
-    end
-    while mq.TLO.Zone.ShortName() ~= startZone do
-        mq.delay(500)
-    end
-end
-
-local function binds()
-    tryAgain = true
-    stuck = false
-    returnToStart()
-end
-    local function binds2()
-    utils.resume = true
-end
-mq.bind('/tsresume', binds)
-mq.bind('/tscontinue', binds2)
-
---Where should I grab it from? (cases)
+local case
+local qtyToGrab
 if inventory >= qty then
-    --just give qty to target
-    if all == true then
-        utils.trade(receiver, tradeList)
-    else
-        utils.trade(receiver, tradeList, qty)
-    end
-elseif (inventory + bankDepot) >= qty then
-    --pick all from the bank, trade, return leftovers to bank
-    give()
-    if all == false then
-        grabList = {[1] = item}
-        if depot > 0 then
-            utils.depot(grabList, false)
-        else
-            utils.bank(grabList)
-        end
-    end
-elseif (inventory + plots) >= qty then
-    --pick up qty - inventory from plots
-    mq.cmdf('/dt %s \awHeading to Sunrise Hills.', settings.driver)
-    print('\at[TsC]\ay '..item..'\ao needs to be picked up from your plot.')
-    for _,v in pairs(plotLocations) do
-        local neigh, plot = string.match(v, "([^,]+),%s*([^,]+)")
-        print('\at[TsC]\ao Heading to \ay'..v..'\ao.')
-        home.go(neigh, plot)
-        utils.cleanup()
-        mq.delay(1000)
-        --Grab items from plot to give to others
-        utils.grabReal(grabList)
-        utils.cleanup()
-    end
-    returnToStart()
-    --Give qty to target
-    if all == true then
-        utils.trade(receiver, tradeList)
-    else
-        utils.trade(receiver, tradeList, qty)
-
-        --now put leftovers back in plot
-        local neigh, plot = string.match(plotLocations[1], "([^,]+),%s*([^,]+)")
-        print('\at[TsC]\ao Heading to \ay'..plotLocations[1]..'\ao.')
-        home.go(neigh, plot)
-        utils.cleanup()
-        mq.delay(1000)
-        local firstPlace = next(items[item]['plots'])
-        local _, _, thisRoom = string.match(firstPlace, "([^,]+),%s([^,]+),%s([^,]+)")
-        local myRoom = 'Closet'
-        if string.match(thisRoom,'Crate') then myRoom = 'Crate' end
-        local putList = {[item] = myRoom}
-        utils.putReal(putList)
-        returnToStart()
-    end
-elseif (inventory + bankDepot + plots) then
-    --pickup all from bank and qty - (inventory + bankDepot) from plots
-    give()
-    grabList = {[1] = item}
-    --pick up qty - inventory from plots
-    mq.cmdf('/dt %s \awHeading to Sunrise Hills.', settings.driver)
-    print('\at[TsC]\ay '..item..'\ao needs to be picked up from your plot.')
-    for _,v in pairs(plotLocations) do
-        local neigh, plot = string.match(v, "([^,]+),%s*([^,]+)")
-        print('\at[TsC]\ao Heading to \ay'..v..'\ao.')
-        home.go(neigh, plot)
-        utils.cleanup()
-        mq.delay(1000)
-        --Grab items from plot to give to others
-        utils.grabReal(grabList)
-        utils.cleanup()
-    end
-    returnToStart()
-    --Give qty to target
-    if all == true then
-        utils.trade(receiver, tradeList)
-    else
-        utils.trade(receiver, tradeList, thisQty)
-        --now return leftovers to bank
-        grabList = {[1] = item}
-        if depot > 0 then
-            utils.depot(grabList, false)
-        else
-            utils.bank(grabList)
-        end
-    end
+    case = 1 --just give
+elseif inventory + bank + depot >= qty then
+    case = 2 --grab from bank/depot then give
+    qtyToGrab = qty - inventory
+elseif inventory + plots >= qty then
+    case = 3 --grab from plots then give
+    qtyToGrab = qty - inventory
+elseif inventory + bank + depot + plots >= qty then
+    case = 4 --grab from plots and bank/depot then give
+    qtyToGrab = qty - bank - depot - inventory --grab all from plots and what's left from bank
 end
 
+if case == 1 then
+    utils.trade(receiver, tradeList, qty)
+    updateResults()
+elseif case == 2 then
+    utils.grab(grabList, what, 2, qtyToGrab)
+    utils.trade(receiver, tradeList)
+    updateResults()
+elseif case == 3 then
+    mq.cmdf('/dt %s \awHeading to Sunrise Hills.', settings.driver)
+    print('\at[TsC]\ay '..item..'\ao needs to be picked up from your plot.')
+    local fromRealQty = qtyToGrab
+    for _,v in pairs(plotLocations) do
+        local neigh, plot = string.match(v, "([^,]+),%s*([^,]+)")
+        print('\at[TsC]\ao Heading to \ay'..v..'\ao.')
+        home.go(neigh, plot)
+        utils.cleanup()
+        mq.delay(1000)
+        local qtyGrabbed = utils.grabReal(grabList, fromRealQty) --Only grab what is needed
+        fromRealQty = fromRealQty - qtyGrabbed
+        utils.cleanup()
+        if fromRealQty <= 0 then break end
+    end
+    if startZone ~= mq.TLO.Zone.ShortName() then returnZone.go(startZone) end
+    utils.trade(receiver, tradeList)
+    updateResults()
+elseif case == 4 then
+    mq.cmdf('/dt %s \awHeading to Sunrise Hills.', settings.driver)
+    print('\at[TsC]\ay '..item..'\ao needs to be picked up from your plot.')
 
-
+    for _,v in pairs(plotLocations) do
+        local neigh, plot = string.match(v, "([^,]+),%s*([^,]+)")
+        print('\at[TsC]\ao Heading to \ay'..v..'\ao.')
+        home.go(neigh, plot)
+        utils.cleanup()
+        mq.delay(1000)
+        utils.grabReal(grabList) --Grab all
+        utils.cleanup()
+    end
+    if startZone ~= mq.TLO.Zone.ShortName() then returnZone.go(startZone) end
+    utils.grab(grabList, what, 2, qty - plots) --Only grab what is needed
+    utils.trade(receiver, tradeList)
+    updateResults()
+end
 
 --Tell init that this script is done
 if settings.driver == me then
@@ -236,6 +169,3 @@ if settings.driver == me then
 else
     mq.cmdf('/dex %s /tsc donedelivering', settings.driver)
 end
-
-mq.unbind('/tscontinue')
-mq.unbind('/tsresume')

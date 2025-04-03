@@ -1,6 +1,5 @@
 --- @type Mq
 local mq = require('mq')
-local utils = require('utils')
 
 local resultPath = 'TSC/tmp/search.lua'
 local toonPath = 'TSC/toons.lua'

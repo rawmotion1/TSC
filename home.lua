@@ -219,7 +219,7 @@ function home.go(neigh, plot)
 
         mq.delay(1000)
         mq.cmd('/cleanup')
-        mq.unbind('/tsresume')
+        mq.unbind('/tsproceed')
     end
 end
 

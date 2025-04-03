@@ -98,19 +98,34 @@ function utils.autoinv()
 end
 
 --Loc: fw=find window, inv=inventory
-function utils.pickup(item, loc)
+function utils.pickup(item, loc, qty)
     repeat
         if loc == 'fw' then 
-            mq.cmd('/shift /notify FindItemWnd FIW_GrabButton leftmouseup')
+            if qty then
+                mq.cmd('/notify FindItemWnd FIW_GrabButton leftmouseup')
+            else
+                mq.cmd('/shift /notify FindItemWnd FIW_GrabButton leftmouseup')
+            end
         else
             local id = mq.TLO.FindItem('='..item).ID() or 0
-            mq.cmdf('/shift /itemnotify #%d leftmouseup', id) end
-            mq.delay(100)
+            if qty then
+                mq.cmdf('/itemnotify #%d leftmouseup', id)
+            else
+                mq.cmdf('/shift /itemnotify #%d leftmouseup', id)
+            end
+        end
+        mq.delay(100)
     until mq.TLO.Cursor() == item or mq.TLO.Window('QuantityWnd').Open()
     if mq.TLO.Window('QuantityWnd').Open() then
+        if qty then
+            repeat
+                mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', qty)
+                mq.delay(100)
+            until mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text() == tostring(qty)
+        end
         repeat
             mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
-            mq.delay(100)
+            mq.delay(1000)
         until mq.TLO.Cursor() == item
     end
 end
@@ -368,7 +383,7 @@ function utils.getInventory()
     return inventory
 end
 
-function utils.grab(grabList, what, mode)
+function utils.grab(grabList, what, mode, qty) --what: 42 is ts mats 20 is collectibles mode: 1 everywhere, 2 bank, 3 depot
     utils.cleanup()
     utils.banker()
     utils.loadFindWindow(what, 2)
@@ -378,7 +393,7 @@ function utils.grab(grabList, what, mode)
         mq.delay(100)
     end
 
-    if mode == 3 then
+    if mode == 3 then --uncheck depot button
         if mq.TLO.Window('FindItemWnd').Child('FIW_SearchDepotButton').Checked() then
             mq.cmd('/notify FindItemWnd FIW_SearchDepotButton leftmouseup')
             mq.delay(300)
@@ -390,6 +405,8 @@ function utils.grab(grabList, what, mode)
     local listSize = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').Items()
     local count = 0
 
+    local runningQty = 0
+
     --Iterate list backwards so order isn't modified
     for i=listSize, 1, -1 do
         local row = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,2)()
@@ -399,15 +416,31 @@ function utils.grab(grabList, what, mode)
         until mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').SelectedIndex() == i
         for k,v in pairs(grabList) do
             if row == v then
+                local qtyThisRow = tonumber(mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,3)())
+
                 if mq.TLO.Me.FreeInventory() > 0 then
                     print('\at[TsC]\ao Found \ay'..v..'\ao in row '..i)
-
+                    
                     repeat
 
                         utils.autoinv()
                         mq.delay(100)
 
-                        utils.pickup(v, 'fw')
+                        if qty then 
+                            if runningQty + qtyThisRow >= qty then
+                                
+                                local lastQty = qty - runningQty
+                                
+                                utils.pickup(v, 'fw', lastQty)
+                                utils.autoinv()
+                                utils.cleanup()
+                                return
+                            else
+                                utils.pickup(v, 'fw')
+                            end
+                        else
+                            utils.pickup(v, 'fw')
+                        end
                         mq.delay(100)
 
                         local skip = false
@@ -423,6 +456,7 @@ function utils.grab(grabList, what, mode)
 
                     until mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,2)() ~= v or skip == true
 
+                    runningQty = runningQty + qtyThisRow
                     if mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List('='..v,2)() == nil then
                         count = count + 1
                         if mode ~= 3 then
@@ -450,7 +484,7 @@ function utils.findTableDifference(table1, table2)
 end
 
 
-function utils.grabReal(list)
+function utils.grabReal(list, qty)
 
     while not mq.TLO.Window('RealEstateItemsWnd').Open() do
         mq.TLO.Window('RealEstateItemsWnd').DoOpen()
@@ -460,6 +494,8 @@ function utils.grabReal(list)
     local listSize = mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').Items()
     local count = 0
 
+    local runningQty = 0
+
     --Iterate list backwards so order isn't modified
     for i=listSize, 1, -1 do
         local row = mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List(i,2)()
@@ -467,6 +503,8 @@ function utils.grabReal(list)
         mq.cmdf('/notify RealEstateItemsWnd REIW_ItemList listselect %s', i)
         for k,v in pairs(list) do
             if row == v then
+                local qtyThisRow = tonumber(mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List(i,4)())
+
                 if mq.TLO.Me.FreeInventory() > 0 then
                     print('\at[TsC]\ao Found \ay'..v..'\ao in row '..i)
 
@@ -477,8 +515,33 @@ function utils.grabReal(list)
 
                         local beforeInventory = utils.getInventory() --Scan inventory
 
-                        mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Inventory_Button leftmouseup')
-                        mq.delay(100)
+                        if qty then 
+                            if runningQty + qtyThisRow >= qty then
+
+                                local lastQty = qty - runningQty
+
+                                mq.cmd('/notify RealEstateItemsWnd REIW_Move_Inventory_Button leftmouseup')
+
+                                repeat
+                                    mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', lastQty)
+                                    mq.delay(100)
+                                until mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text() == tostring(lastQty)
+
+                                mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
+
+                                mq.delay(1000)
+
+                                utils.autoinv()
+                                utils.cleanup()
+                                return runningQty + lastQty
+                            else
+                                mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Inventory_Button leftmouseup')
+                                mq.delay(100)
+                            end
+                        else
+                            mq.cmd('/shift /notify RealEstateItemsWnd REIW_Move_Inventory_Button leftmouseup')
+                            mq.delay(100)
+                        end
 
                         local afterInventory = utils.getInventory() --Scan inventory again after grabbing an item
 
@@ -522,6 +585,7 @@ function utils.grabReal(list)
                         end
 
                     until mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List(i,2)() ~= v or skip == true
+                    runningQty = runningQty + qtyThisRow
 
                     if mq.TLO.Window('RealEstateItemsWnd').Child('REIW_ItemList').List('='..v,2)() == nil then
                         count = count + 1
