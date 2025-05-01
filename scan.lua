@@ -4,7 +4,7 @@ local utils = require('utils')
 
 local args = {...}
 local mode = tonumber(args[1]) --1 normal, 2 give mode
-local what = tonumber(args[2]) -- 42 mats, 19 collectibles
+local what = tonumber(args[2]) -- 42 mats, 20 collectibles
 
 local me = mq.TLO.Me.Name()
 local settingPath = 'TSC/settings.lua'
