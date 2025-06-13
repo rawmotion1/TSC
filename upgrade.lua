@@ -43,9 +43,11 @@ upgrade.newSettings.upgraded = true
 cm.saveData('settings', upgrade.newSettings)
 
 print('\at[TsC]\ao ## Upgrading old mules lists...')
-if #upgrade.oldSettings.mules > 0 then
+if upgrade.oldSettings.mules and #upgrade.oldSettings.mules > 0 then
+    local i = 1
     for _, mules in pairs(upgrade.oldSettings.mules) do
-        upgrade.newMules[mules.name] = true
+        upgrade.newMules[mules.name] = i
+        i = i + 1
     end
     cm.saveData('mules', upgrade.newMules)
 end
@@ -56,7 +58,7 @@ if oldToons then
     upgrade.oldToons = oldToons()
 end
 
-if #upgrade.oldToons > 0 then
+if upgrade.oldToons and #upgrade.oldToons > 0 then
     for _, toon in pairs(upgrade.oldToons) do
         upgrade.newToons[toon.name] = {
             mode = toon.mode or 'Default',
@@ -72,7 +74,7 @@ if oldIgnore then
     upgrade.oldIgnore = oldIgnore()
 end
 
-if #upgrade.oldIgnore > 0 then
+if upgrade.oldIgnore and #upgrade.oldIgnore > 0 then
     for _, item in pairs(upgrade.oldIgnore) do
         upgrade.newIgnore[item] = true
     end
@@ -80,22 +82,24 @@ if #upgrade.oldIgnore > 0 then
 end
 
 print('\at[TsC]\ao ## Upgrading old personal ignore lists...')
-for _, toon in pairs(upgrade.oldToons) do
-    local oldPignore = loadfile(oldPaths.pignore .. toon.name .. '.lua')
-    if oldPignore then
-        upgrade.oldPignore[toon.name] = oldPignore()
-    else
-        upgrade.oldPignore[toon.name] = {}
-    end
+if upgrade.oldToons and #upgrade.oldToons > 0 then
+    for _, toon in pairs(upgrade.oldToons) do
+        local oldPignore = loadfile(oldPaths.pignore .. toon.name .. '.lua')
+        if oldPignore then
+            upgrade.oldPignore[toon.name] = oldPignore()
+        else
+            upgrade.oldPignore[toon.name] = {}
+        end
 
-    if #upgrade.oldPignore[toon.name] > 0 then
-        upgrade.newPignore[toon.name] = {}
-        for _, item in pairs(upgrade.oldPignore[toon.name]) do
-            upgrade.newPignore[toon.name][item] = true
+        if #upgrade.oldPignore[toon.name] > 0 then
+            upgrade.newPignore[toon.name] = {}
+            for _, item in pairs(upgrade.oldPignore[toon.name]) do
+                upgrade.newPignore[toon.name][item] = true
+            end
         end
     end
+    cm.saveData('pignore', upgrade.newPignore)
 end
-cm.saveData('pignore', upgrade.newPignore)
 
 print('\at[TsC]\ao ## Upgrading old artisan lists...')
 local oldArtisan = loadfile(oldPaths.artisan)
@@ -105,7 +109,7 @@ else
     upgrade.oldArtisan = {}
 end
 
-if #upgrade.oldArtisan > 0 then
+if upgrade.oldArtisan and #upgrade.oldArtisan > 0 then
     upgrade.newHoard[upgrade.oldSettings.artisan] = {}
     for _, item in pairs(upgrade.oldArtisan) do
         upgrade.newHoard[upgrade.oldSettings.artisan][item] = true
@@ -114,12 +118,14 @@ if #upgrade.oldArtisan > 0 then
 end
 
 print('\at[TsC]\ao ## Cleaning up old files...')
-for _, toon in pairs(upgrade.oldToons) do
-    local pignoreFile = oldPaths.pignore .. toon.name .. '.lua'
-    if os.remove(pignoreFile) then
-        print('\at[TsC]\ao ## Deleted file: ' .. pignoreFile)
-    else
-        print('\at[TsC]\ao ## Failed to delete file: ' .. pignoreFile)
+if upgrade.oldToons and #upgrade.oldToons > 0 then
+    for _, toon in pairs(upgrade.oldToons) do
+        local pignoreFile = oldPaths.pignore .. toon.name .. '.lua'
+        if os.remove(pignoreFile) then
+            print('\at[TsC]\ao ## Deleted file: ' .. pignoreFile)
+        else
+            print('\at[TsC]\ao ## Failed to delete file: ' .. pignoreFile)
+        end
     end
 end
 if os.remove(oldPaths.artisan) then
