@@ -29,6 +29,8 @@ cm:checkSettings()
 tm.createSubtables()
 tm.setObservers()
 
+print('\at[TsC]\ao Starting Tradeskill Consolidator v'..cm.version)
+
 while main.openGUI do
     tm:runPeriodicTasks()
     if sm.start == true then
