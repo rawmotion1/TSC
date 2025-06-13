@@ -114,9 +114,13 @@ function upgrade.run()
     end
 
     if upgrade.oldArtisan and #upgrade.oldArtisan > 0 then
-        upgrade.newHoard[upgrade.oldSettings.artisan] = {}
+        local hoarder = upgrade.oldSettings.artisan
+        if hoarder == 'Not set' then
+            hoarder = mq.TLO.Me.Name()
+        end
+        upgrade.newHoard[hoarder] = {}
         for _, item in pairs(upgrade.oldArtisan) do
-            upgrade.newHoard[upgrade.oldSettings.artisan][item] = true
+            upgrade.newHoard[hoarder][item] = true
         end
         cm.saveData('hoard', upgrade.newHoard)
     end
