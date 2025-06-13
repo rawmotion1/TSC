@@ -10,6 +10,12 @@ local sm = require('TSC.statemanager')
 local routines = require('TSC.routines')
 local binds = require('TSC.binds')
 
+if cm.settings.artisan then
+    local upgrade = require('TSC.upgrade')
+    print("cm.settings.artisan:", cm.settings.artisan)
+    upgrade.run()
+end
+
 mq.bind('/tsc', binds.commands)
 
 local main = require('TSC.gui.main')
