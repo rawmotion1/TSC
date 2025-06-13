@@ -24,12 +24,12 @@ function utils.stopAll(restart)
 
     for toon,_ in pairs(cm.toons) do
         mq.cmdf('/dobserve %s -drop Me.FreeInventory', toon)
-        utils.execute(toon, '/squelch /lua stop ts3/scripts/banker')
-        utils.execute(toon, '/squelch /lua stop ts3/scripts/depoter')
-        utils.execute(toon, '/squelch /lua stop ts3/scripts/grabber')
-        utils.execute(toon, '/squelch /lua stop ts3/scripts/leftover')
-        utils.execute(toon, '/squelch /lua stop ts3/scripts/scanner')
-        utils.execute(toon, '/squelch /lua stop ts3/scripts/trader')
+        utils.execute(toon, '/squelch /lua stop tsc/scripts/banker')
+        utils.execute(toon, '/squelch /lua stop tsc/scripts/depoter')
+        utils.execute(toon, '/squelch /lua stop tsc/scripts/grabber')
+        utils.execute(toon, '/squelch /lua stop tsc/scripts/leftover')
+        utils.execute(toon, '/squelch /lua stop tsc/scripts/scanner')
+        utils.execute(toon, '/squelch /lua stop tsc/scripts/trader')
         utils.execute(toon, '/squelch /nav stop')
     end
     for mule,_ in pairs(cm.mules) do

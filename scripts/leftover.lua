@@ -39,6 +39,21 @@ local function giveToMules(previousMule)
 
     if mule then
         local full = false
+        if mq.TLO.Spawn('PC ='..mule).Distance() > 20 then
+                mq.cmdf('/squelch /nav spawn PC =%s', mule)
+        end
+        while mq.TLO.Navigation.Active() do
+            if mq.TLO.Spawn('PC ='..mule).Distance() <= 20 then
+                mq.cmd('/squelch /nav stop')
+                break
+            end
+        end
+
+        while mq.TLO.Target.Name() ~= mule do
+            mq.cmdf('/target PC =%s', mule)
+            mq.delay(100)
+        end
+
         full = shared.tradeItems(storeList, mule)
 
         if full == true then --Target's inventory is full, cancel any repeats.

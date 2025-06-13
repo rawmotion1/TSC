@@ -208,6 +208,7 @@ function routines:consolidate(routine)
     --Determine final destination for each item (trades and moves)
     sm.status = 'Comparing'
     print('\at[TsC]\ao----Comparing items...')
+    im.combinedItems = {}
     if routine == 'clean' or routine == 'cleanAll' then
         compare.run(toons, true) -- Run compare for self-clean
     else

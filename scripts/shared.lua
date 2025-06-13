@@ -746,6 +746,7 @@ end
 function shared.tradeItems(tbl, dest, qty)
     local countTo8 = 0
     mq.cmdf('/dobserve %s -q Me.FreeInventory', dest)
+    mq.delay(500)
     for item in pairs(tbl) do
         if mq.TLO.FindItemCount('='..item)() and mq.TLO.FindItemCount('='..item)() > 0 then
             mq.cmd('/keypress OPEN_INV_BAGS')
@@ -802,6 +803,10 @@ function shared.tradeItems(tbl, dest, qty)
                 repeat
                     if mq.TLO.FindItemCount('='..item)() and mq.TLO.FindItemCount('='..item)() > 0 then
                         if countTo8 == 0 then
+                            if not mq.TLO.DanNet(dest).O('Me.FreeInventory')() then
+                                mq.cmdf('/dobserve %s -q Me.FreeInventory', dest)
+                                mq.delay(500)
+                            end
                             if tonumber(mq.TLO.DanNet(dest).O('Me.FreeInventory')()) < 8 then
                                 print('\at[TsC]\ao Uh oh, it appears \ar'..dest..' \ay is low on inventory space!')
                                 return true

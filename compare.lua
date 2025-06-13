@@ -142,6 +142,8 @@ function compare.run(tbl, clean)
                     itemData.destination = destination
                     if destination ~= 'leftovers'then
                         print(string.format('\at[TsC]\ar %s\'s\ay %s\ao will go to \ay%s\ao for consolidation.', utils.fname(name), itemName, destination))
+                    elseif destination == 'leftovers' and cm.hoard[name][itemName] then
+                        itemData.destination = '' --Prevent adding hoard items to leftovers
                     end
                 end
             end
