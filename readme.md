@@ -1,0 +1,225 @@
+v4.0.0 2025-06-13
+
+    Complete refactor
+    Improved performance
+    Increased reliability
+    Introduced hoard lists (replaces artisan feature)
+    Introduced reverse button
+    New list window for handling ignores and hoards
+    Included support for multiple neighborhoods
+    Added an ALL give ALL to... routine
+    Created an auto-update for all settings
+
+v3.2.0 2025-04-03
+
+    Improved item search & deliver
+    Now only grabs precice amount
+    No longer requires a rescan after trading
+
+v3.1.1 2024-12-28
+
+    Transferring from bank to depot works again
+
+v3.1.0 2024-12-22
+
+    Adjusted window size
+    Added inv column for toons
+
+v3.0.3 2024-12-11
+
+    Give utility now respects artisan list
+    Fixed miscellaneous bugs
+
+v3.0.2 2024-12-10
+
+    Added a clear button to the search window
+
+v3.0.1 2024-12-06
+
+    Fixed bug caused by changed to the find window
+    Fixed a bug with duplicate binds
+
+v3.0.0 2024-12-01
+
+    Added a search and deliver feature
+
+v2.4.0 2024-11-15
+
+    Improvements to the matches decision tree fixing depot priority issues
+
+v2.3.1 2024-10-04
+
+    New default behavior: If a toon has an item in their depot, they will now win even if qty is lower
+
+v2.3.0 2024-09-29
+
+    Added a full-auto mode to skip all confirmation boxes
+
+v2.2.3 2024-04-17
+
+    Minor cosmetic fix
+
+v2.2.2 2024-02-21
+
+    Added nil check for inventories
+
+v2.2.1 2024-02-08
+
+    Squashed tidy up bugs from last update
+
+v2.2.0 2024-02-05
+
+    By popular request, added a "Tidy All" feature
+
+v2.1.4 2024-01-19
+
+    TSC now correctly skips over temporary items
+
+v2.1.3 2024-01-06
+
+    Various ImGui 1.90 updates
+
+v2.1.2 2024-01-03
+
+    Fixed UI formatting issue
+
+v2.1.1 2023-12-17
+
+    Fixed potential GUI crash when zoning.
+
+v2.1.0 2023-12-17
+
+    Added yellow dot for toons with low inventory.
+    Hovering over dots now shows toons' inventory.
+
+v2.0.9 2023-12-09
+
+    Updated tooltips for greater clarity.
+    Long tooltip texts now wrap consistently.
+
+v2.0.8 2023-12-05
+
+    Fixed bug causing mules to sometimes report 0 inventory
+
+v2.0.7 2023-11-24
+
+    Use spawn instead of nearestspawn for in-zone check
+    Fix for global ignore crash issue
+
+v2.0.6 19.11.2023
+
+    Fixed issue with moving items between closet and crate
+
+v2.0.5 19.11.2023
+
+    Toons now properly alphabetized
+    No longer try to put attunable items in depot
+
+v2.0.4 18.11.2023
+
+    Improved check if depot items have loaded
+
+v2.0.3 01.11.2023
+
+    Bank routine: no longer scans bank unless restacking
+    Sped up find-window scanning
+    Improved consolidating incomplete stacks in the bank
+
+v2.0.2 01.11.2023
+
+    Fix (I think) for sometimes not picking up find window item
+    Fix for picking up items with quotes in name
+    Stop should now kill all processes, including new ones
+    Won't try to nav to plot if you're already there
+
+v2.0.1 - 31.10.2023
+
+    Scan no longer causes players to run to banker
+    Added address for 103 Betwixt Avenue
+    Won't try to deposit into depot if 99,999 limit reached
+
+v2.0.0 - 30.10.2023
+
+    Added real-estate support
+    Major refactor
+
+v1.0.17 - 20.10.2023
+
+    Fix for issue with toons and pets having the same name
+
+v1.0.16 - 22.09.2023
+
+    Fix for moving items from bank to depot without overloading inventory
+
+v1.0.15 - 08.09.2023
+
+    Modes should work properly again
+
+v1.0.14 - 28.08.2023
+
+    Fixed bug with picking up items
+    Fixed bug with toons with low inventory space
+
+v1.0.13 - 28.08.2023
+
+    Fixed bug with targeting banker
+
+v1.0.12 - 27.08.2023
+
+    Typo
+
+v1.0.11 - 27.08.2023
+
+    Fix for toons with partially identical names
+
+v1.0.10 - 26.07.2023
+
+    Fix for picking up item from main inventory slot
+
+v1.0.9 - 26.07.2023
+
+    Should stop trying to depot non TS items that have identical names to TS items
+
+v1.0.8 - 26.07.2023
+
+    Should no longer have issues with different items that have identical names
+
+v1.0.7 - 24.07.2023
+
+    Closing the TSC window now issues a stop all command and stops all scripts without restarting
+
+v1.0.6 - 23.07.2023
+
+    Toon list is now alphabetized
+    Fixed bug with sorting mules
+
+v1.0.5 - 22.07.2023
+
+    Minor code cleanup in init.lua
+    Updated messaging around Give
+    Can no longer run Give without selecting a target
+
+v1.0.4 - 21.07.2023
+
+    PackageMan no longer crashes on install
+
+v1.0.3 - 20.07.2023
+
+    Removed lfs.dll to use packageman instead
+
+v1.0.2 - 19.07.2023
+
+    Removed unecessary code in alphabatize function
+    Removed unecessary binds
+
+v1.0.1 - 19.07.2023
+
+    Removed option to give to self in give list
+    Give list now shows all dannet peers in zone instead of added toons
+    Added icon for skip buttons
+    Add window now closes when you add all in zone
+    Set "add from file" window size on appearing
+    Improved color consistency of buttons
+    Added item mode to confirmation boxes
+    Added changelog.txt
+
