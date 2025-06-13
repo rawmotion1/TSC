@@ -9,13 +9,13 @@ tip.art = "Set one toon as artisan to ensure they always win on items in your ar
 
 tip.hoardlist = "Manage the list of items you want your artisan to always win and never give away."
 
-tip.self = "Make this toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. No trading unless you have leftovers enabled."
+tip.self = "Make this toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. No trading unless you have leftovers set to mules."
 
 tip.mode = "When toons have the same item, the default is to give to the one with most. Generous and greedy modes override this: a greedy toon wins even with fewer items, while a generous one gives away despite having more."
 
 tip.rest = "This tells a toon what to do with leftover items in their inventory after consolidation is complete. E.g., dump them into your bank."
 
-tip.give = "This tells your toon to give all their mats or collectibles to another toon. You can include everything stored in your bank/depot as well. If your inventory is not big enough, you will make several trips."
+tip.give = "This this toon to give all their mats or collectibles to another toon without any consolidation."
 
 tip.mule = "Mules are only used for Leftovers. When one is full, you will automatically move to the next one. You can right-click to rearrange them."
 
@@ -45,7 +45,7 @@ tip.goall = 'Make sure your settings are the way you want them before proceeding
 
 tip.depotwarning = 'To deposit items into the tradeskill depot, TSC will take over your mouse and change focus to each toon\'s EQ window. You won\'t be able to use your PC while this is happening. Please confirm that you are ready.'
 
-tip.tidyall = 'Make every toon self-consolidate their bank, depot, inventory, and plots without comparing against other toons. Then, run leftovers.'
+tip.tidyall = 'Make every toon self-consolidate their bank, depot, inventory, and plots without any consolidating with others. Then, run leftovers.'
 
 tip.fullauto = 'Skip all confirmation dialogs. WARNGING: Only use this if you know exactly what you\'re doing!'
 
@@ -56,4 +56,6 @@ tip.deliver = "Tell this toon to deliver this item to someone else."
 tip.search = "Search through all your toons' items and move them around."
 
 tip.inv = "Number of free inventory slots this toon currently has."
+
+tip.allgive = "Tell every toon to give all their mats or collectibles to a single toon without any consolidation."
 return tip

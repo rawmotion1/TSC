@@ -1,52 +1,45 @@
---- @type Mq
+---@type Mq
 local mq = require('mq')
+local cm = require('TSC.configmanager')
+local im = require('TSC.itemmanager')
 
-local resultPath = 'TSC/tmp/search.lua'
-local toonPath = 'TSC/toons.lua'
-local toons = {}
+--- @class Search
+local search = {
+    results = {}
+}
 
-local loadToons, toonError = loadfile(mq.configDir..'/'..toonPath)
-if toonError then
-    print('\at[TsC]\ao Error loading toons.lua')
-    mq.exit()
-elseif loadToons then
-    toons = loadToons()
-end
+function search.run(tbl)
 
-local allitems = {}
-for _,toon in pairs(toons) do
-    if mq.TLO.Spawn('PC ='..toon.name)() then --Only load results of toons in-zone
-        local path = 'TSC/tmp/allitems_'..toon.name..'.lua'
-        local table, error = loadfile(mq.configDir..'/'..path)
-        if error then
-            --nothing
-        elseif table then
-            allitems[toon.name] = table()
+    -- Load all toons' items into combinedItems
+    for toon in pairs(tbl) do
+        local items = cm:loadTmp('items', toon)
+        im.combinedItems[toon] = {}
+        for itemName, itemData in pairs(items) do
+            im.combinedItems[toon][itemName] = itemData
         end
     end
-end
+    cm.saveData('combined', im.combinedItems)
 
-local search = {}
-for toon,items in pairs(allitems) do
-    for item,details in pairs(items) do
-        local exists = false
-        for _,v in pairs(search) do
-            if v['item'] == item then
-                exists = true
-                v[toon] = details
+    -- Create an indexed list of items
+    search.results = {}
+    for toon,items in pairs(im.combinedItems) do
+        for item,details in pairs(items) do
+            local exists = false
+            for _,v in pairs(search.results) do
+                if v['item'] == item then
+                    exists = true
+                    v[toon] = details
+                end
+            end
+            if exists == false then
+                local x = {
+                    ['item'] = item,
+                    [toon] = details
+                }
+                table.insert(search.results, x)
             end
         end
-        if exists == false then
-            local x = {
-                ['item'] = item,
-                [toon] = details
-            }
-            table.insert(search, x)
-        end
     end
 end
 
-mq.pickle(resultPath, search)
-
-mq.cmd('/tsc donesearching')
-
+return search
