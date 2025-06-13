@@ -16,19 +16,6 @@ local me = mq.TLO.Me.Name()
 
 function utils.fname(name)
     return name --mq.TLO.NearestSpawn(name).Class() or name
-    --[[local names ={
-        ['Merinok'] = 'Player1',
-        ['Ruinette'] = 'Player2',
-        ['Karthoz'] = 'Player3',
-        ['Locria'] = 'Player4',
-        ['Fertilia'] = 'Player5',
-        ['Amperage'] = 'Player6',
-        ['Nikteniel'] = 'Player7',
-        ['Binamek'] = 'Player8',
-        ['Diddenu'] = 'Player9',
-    }]]
-    --return names[name] or name
-    --return name
 end
 
 
