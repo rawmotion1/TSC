@@ -12,8 +12,10 @@ local binds = require('TSC.binds')
 
 if cm.settings.artisan then
     local upgrade = require('TSC.upgrade')
+    local utils = require('TSC.utils')
     print("cm.settings.artisan:", cm.settings.artisan)
     upgrade.run()
+    utils.stopAll(true)
 end
 
 mq.bind('/tsc', binds.commands)

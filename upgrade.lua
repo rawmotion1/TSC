@@ -16,7 +16,7 @@ local upgrade = {
     newMules = {},
 }
 
-function upgrade:run()
+function upgrade.run()
     local oldPaths = {
         settings = mq.configDir..'/TSC/settings.lua',
         toons = mq.configDir..'/TSC/toons.lua',
