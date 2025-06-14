@@ -1,3 +1,6 @@
+v4.0.2 2025-06-14
+- Added additional depot deposit checks
+
 v4.0.1 2025-06-13
 - Fixed a bug with leftovers
 

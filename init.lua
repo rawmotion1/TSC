@@ -1,5 +1,5 @@
 --Tradeskill Consolidator (TSC) by raw
---Version 4.0.1
+--Version 4.0.2
 --Last updated: 2025-06-13
 
 ---@type Mq

@@ -594,18 +594,26 @@ function shared.putInDepot(depotList, checkSize)
                         break
                     end
 
-                    local id = mq.TLO.FindItem(item).ID()
+                    local id = mq.TLO.FindItem('='..item).ID()
                     repeat
                         mq.cmdf('/shift /itemnotify #%d leftmouseup', id)
                         mq.delay(100)
-                    until mq.TLO.Cursor() and mq.TLO.Cursor() == item
+                        if mq.TLO.Cursor() and not mq.TLO.Cursor.ID() == id then
+                            shared.autoinv()
+                        end
+                        if mq.TLO.FindItemCount(id)() == 0 then
+                            skip = true
+                            break
+                        end
+                    until mq.TLO.Cursor.ID() == id
 
-                    if mq.TLO.Cursor.Tradeskills() and mq.TLO.Cursor.Stackable() and not mq.TLO.Cursor.Lore() and not mq.TLO.Cursor.NoDrop() and not mq.TLO.Cursor.Attuneable() then
+                    if not skip and mq.TLO.Cursor.Tradeskills() and mq.TLO.Cursor.Stackable() and not mq.TLO.Cursor.Lore() and not mq.TLO.Cursor.NoDrop() and not mq.TLO.Cursor.Attuneable() then
 
                         mq.cmd('/foreground self.Name')
 
                         local attempts = 0
                         while mq.TLO.Cursor() do
+                            while not mq.TLO.TradeskillDepot.ItemsReceived() do mq.delay(1000) end
                             mq.cmdf('/mouseto %s %s', mouseLocX, mouseLocY)
                             mq.delay(100)
                             mq.cmd('/click left')
