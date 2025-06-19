@@ -1,3 +1,6 @@
+v4.0.3 2025-06-19
+- Hopefully fixed trader script
+
 v4.0.2 2025-06-14
 - Added additional depot deposit checks
 

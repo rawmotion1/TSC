@@ -14,6 +14,7 @@ local me = mq.TLO.Me.Name() -- Get the name of the current character
 --Return the length of a table
 function shared.tableLength(tbl)
     local count = 0
+    tbl = tbl or {}
     for _ in pairs(tbl) do
         count = count + 1
     end
@@ -655,7 +656,7 @@ function shared.putInDepot(depotList, checkSize)
 end
 
 function shared.putInBank(tbl, tbl2, itemType)
-    if shared.tableLength(tbl) > 0 then
+    if tbl and shared.tableLength(tbl) > 0 then
         print('\at[TsC]\ao Putting items in the bank.')
 
         --Go to banker and open bank window
@@ -760,6 +761,7 @@ function shared.tradeItems(tbl, dest, qty)
             mq.cmd('/keypress OPEN_INV_BAGS')
             mq.cmd('/squelch /lua parse mq.TLO.Window("InventoryWindow").DoOpen()')
 
+            local id = mq.TLO.FindItem('='..item).ID()
             local totalGiven = 0
             local qtyToGive = qty and (qty - totalGiven) or nil
             local inv = mq.TLO.FindItemCount('='..item)()
@@ -767,19 +769,27 @@ function shared.tradeItems(tbl, dest, qty)
 
             if qtyToGive and qtyToGive <= stackSize then
                 print('\at[TsC]\ao Giving \ay'..item..' \aoto \ar'..dest)
-                repeat
-                    mq.cmdf('/itemnotify "%s" leftmouseup', item)
+                while not mq.TLO.Cursor() do
+                    mq.cmdf('/itemnotify #%s leftmouseup', id)
                     mq.delay(200)
-                until mq.TLO.Window('QuantityWnd')() or (mq.TLO.Cursor() and mq.TLO.Cursor() == item)
-                repeat
+
                     mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', qty)
                     mq.delay(200)
-                until tonumber(mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text()) == qty or (mq.TLO.Cursor() and mq.TLO.Cursor() == item)
-                repeat
+
                     mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
                     mq.delay(200)
-                until mq.TLO.Cursor() and mq.TLO.Cursor() == item
-                
+
+                    if mq.TLO.Cursor() and not mq.TLO.Cursor.ID() == id then
+                        shared.autoinv()
+                        mq.delay(200)
+                    end
+                    if not mq.TLO.FindItemCount('='..item)() then
+                        break
+                    end
+                    if mq.TLO.Cursor() and mq.TLO.Cursor.ID() == id then
+                        break
+                    end
+                end
                 mq.delay(200)
                 if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
                     shared.autoinv()
@@ -787,16 +797,19 @@ function shared.tradeItems(tbl, dest, qty)
                     shared.cleanup()
                     break
                 else
-                    if mq.TLO.Target.Name() ~= dest then
-                        repeat
-                            mq.cmdf('/target "=%s"', dest)
-                            mq.delay(200)
-                        until mq.TLO.Target.Name() == dest
-                    end
-                    repeat
+                    while mq.TLO.Cursor() do
+                        if mq.TLO.Target.Name() ~= dest then
+                            while not mq.TLO.Target.Name() do
+                                mq.cmdf('/target "=%s"', dest)
+                                mq.delay(200)
+                                if mq.TLO.Target.Name() == dest then
+                                    break
+                                end
+                            end
+                        end
                         mq.cmd('/usetarget')
-                        mq.delay(300)
-                    until mq.TLO.Window('TradeWnd').Open()
+                        mq.delay(500)
+                    end
                     mq.delay(300)
                 end
                 repeat
@@ -823,19 +836,33 @@ function shared.tradeItems(tbl, dest, qty)
                         print('\at[TsC]\ao Giving \ay'..item..' \aoto \ar'..dest)
                         local grabAmount = math.min(stackSize, qtyToGive or stackSize)
                         grabAmount = math.min(grabAmount, inv)
-                        
-                        repeat
-                            mq.cmdf('/itemnotify "%s" leftmouseup', item)
+
+                        while not mq.TLO.Cursor() do
+                            mq.cmdf('/itemnotify #%s leftmouseup', id)
                             mq.delay(200)
-                        until mq.TLO.Window('QuantityWnd')() or (mq.TLO.Cursor() and mq.TLO.Cursor() == item)
-                        repeat
-                            mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', grabAmount)
-                            mq.delay(200)
-                        until tonumber(mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text()) == grabAmount  or (mq.TLO.Cursor() and mq.TLO.Cursor() == item)
-                        repeat
-                            mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
-                            mq.delay(200)
-                        until mq.TLO.Cursor() and mq.TLO.Cursor() == item
+                            if mq.TLO.Cursor() and not mq.TLO.Cursor.ID() == id then
+                                shared.autoinv()
+                                mq.delay(200)
+                            end
+                            if mq.TLO.Window('QuantityWnd')() then
+                                mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', grabAmount)
+                                mq.delay(200)
+                                if tonumber(mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text()) == grabAmount then
+                                    mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
+                                    mq.delay(200)
+                                end
+                            end
+                            if mq.TLO.Cursor() and not mq.TLO.Cursor.ID() == id then
+                                shared.autoinv()
+                                mq.delay(200)
+                            end
+                            if not mq.TLO.FindItemCount('='..item)() then
+                                break
+                            end
+                            if mq.TLO.Cursor() and mq.TLO.Cursor.ID() == id then
+                                break
+                            end
+                        end
 
                         totalGiven = totalGiven + mq.TLO.CursorAttachment.Quantity()
                         qtyToGive = qty and (qtyToGive - totalGiven) or nil
@@ -847,16 +874,20 @@ function shared.tradeItems(tbl, dest, qty)
                             shared.cleanup()
                             break
                         else
-                            if mq.TLO.Target.Name() ~= dest then
-                                repeat
-                                    mq.cmdf('/target "=%s"', dest)
-                                    mq.delay(200)
-                                until mq.TLO.Target.Name() == dest
-                            end
-                            repeat
+                            while mq.TLO.Cursor() do
+                                if mq.TLO.Target.Name() ~= dest then
+                                    while not mq.TLO.Target.Name() do
+                                        mq.cmdf('/target "=%s"', dest)
+                                        mq.delay(200)
+                                        if mq.TLO.Target.Name() == dest then
+                                            break
+                                        end
+                                    end
+                                end
                                 mq.cmd('/usetarget')
-                                mq.delay(300)
-                            until mq.TLO.Window('TradeWnd').Open()
+                                mq.delay(500)
+                            end
+                            mq.delay(300)
                         end
                         mq.delay(300)
                         countTo8 = countTo8 + 1
@@ -865,12 +896,12 @@ function shared.tradeItems(tbl, dest, qty)
                                 mq.cmd('/notify TradeWnd TRDW_Trade_Button leftmouseup')
                                 mq.delay(100)
                                 mq.cmdf('/dex %s /squelch /notify TradeWnd TRDW_Trade_Button leftmouseup', dest)
-                                mq.delay(300)
+                                mq.delay(500)
                             until not mq.TLO.Window('TradeWnd').Open()
                             countTo8 = 0
                         end
                     end
-                until (totalGiven and qtyToGive and totalGiven >= qtyToGive) or totalGiven >= inv 
+                until (totalGiven and qtyToGive and totalGiven >= qtyToGive) or totalGiven >= inv
             end
         end
     end
