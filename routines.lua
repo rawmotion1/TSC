@@ -382,9 +382,9 @@ function routines:give(routine)
     else
         scope = 'inventory give' -- Scan only inventory items
     end
-    
+
     self:scan(toons, scope)
-    
+
     utils.waiting(utils.tableLength(toons)) --Wait for all scans to finish
     print('\at[TsC]\ao----Done scanning.')
 
@@ -404,6 +404,7 @@ function routines:give(routine)
 
     if sm.skipTrading == false then --They clicked continue
 
+    if sm.includeBank then
         sm.status = 'Retreiving items'
         print('\at[TsC]\ao----Retreiving items...')
         self:grab(im.lists.tograb) --Grab items from plots and bank
@@ -411,7 +412,7 @@ function routines:give(routine)
         print('\at[TsC]\ao----Done retreiving.')
 
         utils.execute(sm.giveTarget, '/cleanup')
-
+    end
         --Run the trader script on one toon at a time
         sm.status = 'Trading items'
         print('\at[TsC]\ao----Trading items...')

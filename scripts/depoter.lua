@@ -15,7 +15,7 @@ mq.bind('/tsresume', binds)
 if mq.TLO.TradeskillDepot.Enabled() and (lists.todepot[me] or lists.tomovedepot[me]) then
     print('\at[TsC]\ao Putting items in the depot...')
     if lists.todepot[me] then
-        shared.putInDepot(lists.todepot[me])
+        shared.putInDepot(lists.todepot[me], false)
     end
     if lists.tomovedepot[me] then
         shared.putInDepot(lists.tomovedepot[me], false)

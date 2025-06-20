@@ -10,7 +10,7 @@ local config = {
     pignore = {},
     hoard = {},
     mules = {},
-    version = '4.0.3',
+    version = '4.0.4',
     driver = '',
 }
 

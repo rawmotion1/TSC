@@ -1,3 +1,6 @@
+v4.0.3 2025-06-20
+- Minor bug fixes
+
 v4.0.3 2025-06-19
 - Hopefully fixed trader script
 

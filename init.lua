@@ -1,6 +1,6 @@
 --Tradeskill Consolidator (TSC) by raw
---Version 4.0.3
---Last updated: 2025-06-19
+--Version 4.0.4
+--Last updated: 2025-06-20
 
 ---@type Mq
 local mq = require('mq')
@@ -9,6 +9,8 @@ local tm = require('TSC.toonmanager')
 local sm = require('TSC.statemanager')
 local routines = require('TSC.routines')
 local binds = require('TSC.binds')
+
+mq.cmd('/dgae /dnet fullnames off')
 
 if cm.settings.artisan then
     local upgrade = require('TSC.upgrade')

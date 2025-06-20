@@ -32,10 +32,10 @@ local function tradeToons()
         --Close all windows
         shared.cleanup()
 
-        mq.delay(200)
+        mq.delay(300)
 
         --If the destination toon has free inventory, navigate to them and target them
-        if tonumber(mq.TLO.DanNet(dest).O('Me.FreeInventory')()) > 7 then
+        if mq.TLO.DanNet(dest).O('Me.FreeInventory')() and tonumber(mq.TLO.DanNet(dest).O('Me.FreeInventory')()) > 7 then
             local target = mq.TLO.Spawn('PC ='..dest)()
             if target == nil then
                 print('\at[TsC]\ao Target not found in zone. Stopping')
