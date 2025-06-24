@@ -1,3 +1,6 @@
+v4.0.5 2025-06-24
+- Added horizontal scroll to list window
+
 v4.0.4 2025-06-20
 - Minor bug fixes
 

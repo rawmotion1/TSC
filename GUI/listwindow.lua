@@ -11,7 +11,8 @@ local listWindow = {
 
 function listWindow.draw()
     if listWindow.openList then
-        listWindow.openList = ImGui.Begin('All Toons Lists', listWindow.openList, ImGuiWindowFlags.Resizable)
+        ImGui.SetNextWindowSize(800, 600, ImGuiCond.Once)
+        listWindow.openList = ImGui.Begin('All Toons Lists', listWindow.openList, ImGuiWindowFlags.HorizontalScrollbar)
         ImGui.SetWindowSize(800, 600, ImGuiCond.Once)
 
         ImGui.PushStyleColor(ImGuiCol.Header, 0, 0.5, 0, .75) -- Set color for collapsible headers
@@ -22,9 +23,12 @@ function listWindow.draw()
             local gutterAdjustment = 8 -- Adjust for gutters and add a small buffer
             local sortedToons = utils.getAlphabetizedList(cm.toons) -- Sort toons alphabetically
             local tableWidth = (x - gutterAdjustment * (#sortedToons - 1)) / #sortedToons
+            if tableWidth < 100 then
+                tableWidth = 100 -- Ensure minimum width for readability
+            end
             local maxHeight = y / 2 -- Limit height to prevent scroll bar
 
-            ImGui.BeginChild('HoardLists', x, maxHeight, false)
+            ImGui.BeginChild('HoardLists', x, maxHeight, false, ImGuiWindowFlags.HorizontalScrollbar)
             for _, toon in ipairs(sortedToons) do
                 ImGui.AlignTextToFramePadding()
                 ImGui.BeginGroup() -- Group the toon name and table together
@@ -116,9 +120,12 @@ function listWindow.draw()
             local gutterAdjustment = 8 -- Adjust for gutters and add a small buffer
             local sortedToons = utils.getAlphabetizedList(cm.toons) -- Sort toons alphabetically
             local tableWidth = (x - gutterAdjustment * (#sortedToons - 1)) / #sortedToons
+            if tableWidth < 100 then
+                tableWidth = 100 -- Ensure minimum width for readability
+            end
             local maxHeight = y -- Limit height to prevent scroll bar
 
-            ImGui.BeginChild('IgnoreLists', x, maxHeight, false)
+            ImGui.BeginChild('IgnoreLists', x, maxHeight, false, ImGuiWindowFlags.HorizontalScrollbar)
             for _, toon in ipairs(sortedToons) do
                 ImGui.AlignTextToFramePadding()
                 ImGui.BeginGroup() -- Group the toon name and table together

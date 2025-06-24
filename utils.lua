@@ -15,7 +15,7 @@ local me = mq.TLO.Me.Name()
 --
 
 function utils.fname(name)
-    return name --mq.TLO.NearestSpawn(name).Class() or name
+    return name
 end
 
 

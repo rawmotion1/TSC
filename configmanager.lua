@@ -10,7 +10,7 @@ local config = {
     pignore = {},
     hoard = {},
     mules = {},
-    version = '4.0.4',
+    version = '4.0.5',
     driver = '',
 }
 
@@ -154,7 +154,6 @@ function config:removehoardItem(name, item)
 end
 
 function config.fname(name)
-    --return mq.TLO.NearestSpawn(name).Class()
     return name
 end
 
