@@ -23,8 +23,8 @@ function listWindow.draw()
             local gutterAdjustment = 8 -- Adjust for gutters and add a small buffer
             local sortedToons = utils.getAlphabetizedList(cm.toons) -- Sort toons alphabetically
             local tableWidth = (x - gutterAdjustment * (#sortedToons - 1)) / #sortedToons
-            if tableWidth < 100 then
-                tableWidth = 100 -- Ensure minimum width for readability
+            if tableWidth < 150 then
+                tableWidth = 150 -- Ensure minimum width for readability
             end
             local maxHeight = y / 2 -- Limit height to prevent scroll bar
 
@@ -120,8 +120,8 @@ function listWindow.draw()
             local gutterAdjustment = 8 -- Adjust for gutters and add a small buffer
             local sortedToons = utils.getAlphabetizedList(cm.toons) -- Sort toons alphabetically
             local tableWidth = (x - gutterAdjustment * (#sortedToons - 1)) / #sortedToons
-            if tableWidth < 100 then
-                tableWidth = 100 -- Ensure minimum width for readability
+            if tableWidth < 150 then
+                tableWidth = 150 -- Ensure minimum width for readability
             end
             local maxHeight = y -- Limit height to prevent scroll bar
 
