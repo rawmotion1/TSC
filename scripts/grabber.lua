@@ -53,6 +53,7 @@ local function grabFromBank()
             print('\at[TsC]\ao Grabbing \ay'..item..'\ao from row '..row..' in the bank/depot.')
 
             if qtyToGrab and qtyToGrab <= stackSize then
+                local grabAmount = math.min(qtyToGrab, 1000)
                 repeat
                     mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', row)
                     mq.delay(100)
@@ -60,15 +61,15 @@ local function grabFromBank()
                     mq.delay(100)
                 until mq.TLO.Window('QuantityWnd').Open()
                 repeat
-                    mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', qtyToGrab)
+                    mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', grabAmount)
                     mq.delay(100)
-                until mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text() == tostring(qtyToGrab)
+                until mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text() == tostring(grabAmount)
                 repeat
                     mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
                     mq.delay(100)
                 until mq.TLO.Cursor() == item
-                totalGrabbed = totalGrabbed + qtyToGrab
-                qtyToGrab = 0 -- All required quantity grabbed
+                totalGrabbed = totalGrabbed + grabAmount
+                qtyToGrab = qtyToGrab - grabAmount
             else
                 local grabAmount = math.min(stackSize, qtyToGrab or stackSize)
                 repeat

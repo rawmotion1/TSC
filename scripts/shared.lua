@@ -847,10 +847,8 @@ function shared.tradeItems(tbl, dest, qty)
                             if mq.TLO.Window('QuantityWnd')() then
                                 mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', grabAmount)
                                 mq.delay(200)
-                                if tonumber(mq.TLO.Window('QuantityWnd').Child('QTYW_SliderInput').Text()) == grabAmount then
-                                    mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
-                                    mq.delay(200)
-                                end
+                                mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
+                                mq.delay(200)
                             end
                             if mq.TLO.Cursor() and not mq.TLO.Cursor.ID() == id then
                                 shared.autoinv()
@@ -864,8 +862,9 @@ function shared.tradeItems(tbl, dest, qty)
                             end
                         end
 
-                        totalGiven = totalGiven + mq.TLO.CursorAttachment.Quantity()
-                        qtyToGive = qty and (qtyToGive - totalGiven) or nil
+                        local given = mq.TLO.CursorAttachment.Quantity()
+                        totalGiven = totalGiven + given
+                        qtyToGive = qty and (qtyToGive - given) or nil
 
                         mq.delay(200)
                         if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
@@ -901,7 +900,7 @@ function shared.tradeItems(tbl, dest, qty)
                             countTo8 = 0
                         end
                     end
-                until (totalGiven and qtyToGive and totalGiven >= qtyToGive) or totalGiven >= inv
+                until (totalGiven and qtyToGive and totalGiven >= qty) or totalGiven >= inv
             end
         end
     end

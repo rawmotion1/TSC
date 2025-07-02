@@ -77,6 +77,8 @@ for i=1, listSize do
             item = mq.TLO.FindItemBank('='..name)
         elseif string.match(location, "Personal") then
             item = mq.TLO.TradeskillDepot.FindItem('='..name)
+        elseif string.match(location, "Parcel") then
+            skip = true
         elseif string.match(location, ",") then
             --Item is in a plot location and we can't get info
             if cm.settings.includePlots == false or give then
