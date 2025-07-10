@@ -77,7 +77,8 @@ for i=1, listSize do
             item = mq.TLO.FindItemBank('='..name)
         elseif string.match(location, "Personal") then
             item = mq.TLO.TradeskillDepot.FindItem('='..name)
-        elseif string.match(location, "Parcel") then
+        -- Ignore keychain items
+        elseif string.match(location, "Parcel") or string.match(location, "Mount") or string.match(location, "Illusion") or string.match(location, "Familiar") or string.match(location, "Teleportation") or string.match(location, "Activated") then
             skip = true
         elseif string.match(location, ",") then
             --Item is in a plot location and we can't get info

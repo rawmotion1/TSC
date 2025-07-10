@@ -1,3 +1,6 @@
+v4.0.7 2025-07-10
+- Ignore keychain items
+
 v4.0.6 2025-07-02
 - Fixed issue with trading multiple stacks
 - Fixed issue with items in parcels
