@@ -69,6 +69,7 @@ end
 --Run grabber
 function routines:grab(tbl)
     for k in pairs(tbl) do
+        print('\at[TsC]\ao \ar'..utils.fname(k)..'\ao is retrieving items...')
         utils.execute(k, '/lua run TSC/scripts/grabber '..sm.itemType)
         mq.delay(100)
     end
@@ -77,6 +78,7 @@ end
 --Run trader
 function routines:trade(tbl)
     for k in pairs(tbl) do
+        print('\at[TsC]\ao \ar'..utils.fname(k)..'\ao is trading items...')
         utils.execute(k, '/lua run TSC/scripts/trader '..sm.itemType)
         utils.waiting(1) --Wait for each toon to finish before moving on
         mq.delay(100)
@@ -86,6 +88,7 @@ end
 --Run banker
 function routines:bank(tbl)
     for k in pairs(tbl) do
+        print('\at[TsC]\ao \ar'..utils.fname(k)..'\ao is storing items...')
         utils.execute(k, '/lua run TSC/scripts/banker '..sm.itemType)
         mq.delay(100)
     end
@@ -94,6 +97,7 @@ end
 --Run depot
 function routines:depot(tbl)
     for k in pairs(tbl) do
+        print('\at[TsC]\ao \ar'..utils.fname(k)..'\ao is putting items in the depot...')
         utils.execute(k, '/lua run TSC/scripts/depoter')
         utils.waiting(1) --Wait for each toon to finish before moving on
         mq.delay(100)
@@ -104,6 +108,7 @@ end
 function routines:leftovers(tbl)
     for k in pairs(tbl) do
         if cm.toons[k].leftovers ~= 'Off' then
+            print('\at[TsC]\ao \ar'..utils.fname(k)..'\ao is processing leftovers...')
             utils.execute(k, '/lua run TSC/scripts/leftover')
             utils.waiting(1) --Wait for each toon to finish before moving on
             mq.delay(100)

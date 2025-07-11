@@ -138,6 +138,6 @@ if (lists.tobank[me] and shared.tableLength(lists.tobank[me]) > 0) or (lists.tom
     shared.cleanup()
 end
 
-shared.execute(cm.settings.driver, '/tsc donebanking')
+shared.execute(cm.settings.driver, '/tsc donebanking '..me)
 
 mq.unbind('/tsresume')

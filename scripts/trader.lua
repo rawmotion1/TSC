@@ -64,6 +64,6 @@ local function tradeToons()
 end
 tradeToons()
 
-shared.execute(cm.settings.driver, '/tsc donetrading')
+shared.execute(cm.settings.driver, '/tsc donetrading '..me)
 
 shared.cleanup()

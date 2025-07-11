@@ -22,6 +22,6 @@ if mq.TLO.TradeskillDepot.Enabled() and (lists.todepot[me] or lists.tomovedepot[
     end
 end
 
-shared.execute(cm.settings.driver, '/tsc donedepot')
+shared.execute(cm.settings.driver, '/tsc donedepot '..me)
 
 mq.unbind('/tsresume')

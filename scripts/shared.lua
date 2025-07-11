@@ -683,6 +683,7 @@ function shared.putInBank(tbl, tbl2, itemType)
                     if full == true then
                         shared.cleanup()
                         shared.autoinv()
+                        print('\at[TsC]\ao Bank is full! Stopping.')
                         return true -- Bank is full
                     end
                 until not mq.TLO.FindItem('='..item).ID()

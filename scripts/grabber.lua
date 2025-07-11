@@ -260,9 +260,9 @@ if cm.settings.driver ~= me then
         mq.delay(3000)
     until driverZone == startZone
     mq.delay(200)
-    shared.execute(cm.settings.driver, '/tsc donegrabbing')
+    shared.execute(cm.settings.driver, '/tsc donegrabbing '..me)
 else
-    mq.cmd('/tsc donegrabbing')
+    mq.cmd('/tsc donegrabbing '..me)
 end
 
 if beenToPlots then

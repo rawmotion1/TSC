@@ -123,5 +123,5 @@ elseif rest == 'Mules' then
     end
 end
 
-shared.execute(cm.settings.driver, '/tsc donerest')
+shared.execute(cm.settings.driver, '/tsc donerest '..me)
 --Tell init that this script is done

@@ -1,3 +1,6 @@
+v4.0.9 2025-07-11
+- Added additional logs indicating who does what
+
 v4.0.8 2025-07-11
 - Fixed: GiveAll now works with Full-Auto mode
 
