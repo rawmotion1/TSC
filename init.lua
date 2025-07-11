@@ -1,6 +1,6 @@
 --Tradeskill Consolidator (TSC) by raw
---Version 4.0.7
---Last updated: 2025-07-10
+--Version 4.0.8
+--Last updated: 2025-07-11
 
 ---@type Mq
 local mq = require('mq')

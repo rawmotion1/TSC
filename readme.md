@@ -1,3 +1,6 @@
+v4.0.8 2025-07-11
+- Fixed: GiveAll now works with Full-Auto mode
+
 v4.0.7 2025-07-10
 - Ignore keychain items
 

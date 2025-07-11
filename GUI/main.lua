@@ -527,11 +527,7 @@ function main.tscWindow()
 
         --All give to all
         if ImGui.Button('All give to...',x,0) then
-            if cm.settings.fullAuto == false then
-                ImGui.OpenPopup('Every toon give all items to...##all')
-            else
-                sm.routine = 'cleanAll' sm.start = true
-            end
+            ImGui.OpenPopup('Every toon give all items to...##all')
         end
         if ImGui.IsItemHovered() then ImGui.BeginTooltip() ImGui.PushTextWrapPos(300) ImGui.TextWrapped(tip.allgive) ImGui.PopTextWrapPos() ImGui.EndTooltip() end
         ImGui.PopStyleColor()
