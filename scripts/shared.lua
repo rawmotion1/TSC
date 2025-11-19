@@ -6,7 +6,9 @@ local loc = require('TSC.plotlocations')
 local shared = {
     stuck = false,
     tryAgain = false,
-    state = nil
+    state = nil,
+    TS = 44,
+    CL = 21
 }
 
 local me = mq.TLO.Me.Name() -- Get the name of the current character

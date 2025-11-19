@@ -1,3 +1,10 @@
+v4.1.0 2025-11-19
+- Bug fixes from recent patch related to find window changes
+- Properly selects tradeskill or collectible
+- Finds the correct location column
+- Properly detects no-drop, containers, etc.
+- Properly detects bank restack items
+
 v4.0.9 2025-07-11
 - Added additional logs indicating who does what
 

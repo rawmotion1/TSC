@@ -10,7 +10,7 @@ local combinedItems = cm.loadData('combined')
 
 local args = {...}
 local itemType
-if args[1] == 'Tradeskill' then itemType = 42 else itemType = 20 end
+if args[1] == 'Tradeskill' then itemType = shared.TS else itemType = shared.CL end
 
 
 -- Main real estate function. Manage moving between plots, grabbing items, and depositing them

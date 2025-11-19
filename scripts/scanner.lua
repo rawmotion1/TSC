@@ -7,9 +7,9 @@ local me = mq.TLO.Me.Name()
 local args = {...}
 local itemType
 if args[1] == 'Tradeskill' then
-    itemType = 42
+    itemType = shared.TS
 else
-    itemType = 20
+    itemType = shared.CL
 end
 
 if args[2] == 'all' then
@@ -58,7 +58,7 @@ local listSize = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').Items()
 for i=1, listSize do
     local name = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,2)()
     local qty = tonumber(mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,3)())
-    local location = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,4)()
+    local location = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,5)()
 
     local skip = false
     for k in pairs(combinedIgnore) do

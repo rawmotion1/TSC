@@ -153,12 +153,16 @@ function ItemManager:determineDestination(itemData, itemName)
         return maxPlot
     elseif utils.tableLength(itemData.bank) > 0 then
         if utils.tableLength(itemData.plots) == 0 --[[and utils.tableLength(itemData.inventory) == 0]] then
-            local max = itemData.stacksize or 0
+            local max = mq.TLO.FindItemBank(itemName).StackSize() or 0
             local x = 0
             for _, qty in pairs(itemData.bank) do
                 if qty < max then x = x + 1 end
             end
-            return x > 1 and 'bankrestack' or 'bank'
+            if utils.tableLength(itemData.inventory) ~= 0 then
+                return 'bank'
+            elseif x > 1 then
+                return 'bankrestack'
+            end
         else
             return 'bank'
         end

@@ -10,7 +10,7 @@ mq.cmdf('/dobserve %s -q Zone.ShortName', cm.settings.driver)
 local args = {...}
 
 local itemType
-if args[1] == 'Tradeskill' then itemType = 42 else itemType = 20 end
+if args[1] == 'Tradeskill' then itemType = shared.TS else itemType = shared.CL end
 
 --If QTY arg is passed, assume we have just 1 item to grab QTY of
 local qty = args[2] or nil
