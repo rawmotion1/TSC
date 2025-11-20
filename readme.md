@@ -1,3 +1,6 @@
+v4.1.1 2025-11-20
+- Fix: Items that need to be restacked in the bank should no longer cause problems
+
 v4.1.0 2025-11-19
 - Bug fixes from recent patch related to find window changes
 - Properly selects tradeskill or collectible

@@ -136,11 +136,13 @@ function compare.run(tbl, clean)
         for itemName, itemData in pairs(items) do
             if itemData.destination == '' then
                 if itemData.locations == 1 and utils.tableLength(itemData.inventory) == 0 then
-                    im.combinedItems[name][itemName] = nil --already consolidated
+                    im.combinedItems[name][itemName] = nil --already consolidated.
                 else
                     local destination = im:determineDestination(itemData, itemName)
                     itemData.destination = destination
-                    if destination ~= 'leftovers'then
+                    if destination == nil then
+                        im.combinedItems[name][itemName] = nil --Multiple stack in bank, already consolidated.
+                    elseif destination ~= 'leftovers'then
                         print(string.format('\at[TsC]\ar %s\'s\ay %s\ao will go to \ay%s\ao for consolidation.', utils.fname(name), itemName, destination))
                     elseif destination == 'leftovers' and cm.hoard[name][itemName] then
                         itemData.destination = '' --Prevent adding hoard items to leftovers

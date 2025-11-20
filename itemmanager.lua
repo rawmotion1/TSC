@@ -143,7 +143,7 @@ end
 function ItemManager:determineDestination(itemData, itemName)
     if itemData.depot > 0 then
         return 'depot'
-    elseif utils.tableLength(itemData.plots) > 0 and (utils.tableLength(itemData.bank) == 0 or cm.settings.preferPlots) then
+    elseif utils.tableLength(itemData.plots) > 0 and (utils.tableLength(itemData.plots) > utils.tableLength(itemData.bank) or cm.settings.preferPlots) then
         local maxPlot = next(itemData.plots)
         for plot, qty in pairs(itemData.plots) do
             if qty > itemData.plots[maxPlot] then
@@ -162,6 +162,8 @@ function ItemManager:determineDestination(itemData, itemName)
                 return 'bank'
             elseif x > 1 then
                 return 'bankrestack'
+            else
+                --Multiple stacks already consolidated in bank
             end
         else
             return 'bank'
