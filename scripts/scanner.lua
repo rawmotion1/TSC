@@ -12,12 +12,18 @@ else
     itemType = shared.CL
 end
 
+local includeIgnores = false
+
 if args[2] == 'all' then
     --Load items in the find window
     shared.initFindWindow(itemType, 1) -- 1 is everywhere
 elseif args[2] == 'inventory' then
     --Load items in the find window
     shared.initFindWindow(itemType, 4) -- 4 is inventory only
+elseif args[2] == 'search' then
+    includeIgnores = true
+    --Load items in the find window
+    shared.initFindWindow(itemType, 1) -- 1 is everywhere
 end
 
 
@@ -61,11 +67,13 @@ for i=1, listSize do
     local location = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(i,5)()
 
     local skip = false
-    for k in pairs(combinedIgnore) do
-        if name == k then
-            skip = true
-            --print('\at[TsC]\ao Skipping \ay'..name..'\ao because it\'s on ' .. combinedIgnore[k] .. '.')
-            break
+    if includeIgnores == false then
+        for k in pairs(combinedIgnore) do
+            if name == k then
+                skip = true
+                --print('\at[TsC]\ao Skipping \ay'..name..'\ao because it\'s on ' .. combinedIgnore[k] .. '.')
+                break
+            end
         end
     end
 

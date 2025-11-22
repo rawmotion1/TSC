@@ -1,3 +1,6 @@
+v4.1.2 2025-11-22
+- Feat: The Search & Deliver feature now shows items on ignore lists.
+
 v4.1.1 2025-11-20
 - Fix: Items that need to be restacked in the bank should no longer cause problems
 

@@ -464,7 +464,7 @@ function routines:search()
     -- Tell each toon to run the scanner
     sm.status = 'Scanning'
     print('\at[TsC]\ao----Scanning toons...')
-    self:scan(tm.onlineToons, 'all') -- Scan all items for all toons	
+    self:scan(tm.onlineToons, 'search') -- Scan all items for all toons	
     utils.waiting(utils.tableLength(tm.onlineToons)) --Wait for all scans to finish
     print('\at[TsC]\ao----Done scanning.')
 
@@ -529,8 +529,8 @@ function routines:deliver()
     utils.clearStats()
 
     --Update toons' item tables quantity
-    utils.execute(sm.activeToon, '/lua run TSC/scripts/scanner '..sm.itemType..' all '..'"'..sm.deliverItem..'"')
-    utils.execute(sm.giveTarget, '/lua run TSC/scripts/scanner '..sm.itemType..' all '..'"'..sm.deliverItem..'"')
+    utils.execute(sm.activeToon, '/lua run TSC/scripts/scanner '..sm.itemType..' search '..'"'..sm.deliverItem..'"')
+    utils.execute(sm.giveTarget, '/lua run TSC/scripts/scanner '..sm.itemType..' search '..'"'..sm.deliverItem..'"')
     utils.waiting(2)
 
     --Recompile search results
