@@ -592,7 +592,8 @@ function shared.putInDepot(depotList, checkSize)
             if checkSize == false or mq.TLO.TradeskillDepot.Count() < mq.TLO.TradeskillDepot.Capacity() then
                 local skip = false
                 repeat
-                    if mq.TLO.TradeskillDepot.FindItemCount('='..item)() >= 99999 then
+                    local currentCount = mq.TLO.TradeskillDepot.FindItemCount('='..item)() or 0
+                    if currentCount >= 99999 then
                         print('\at[TsC]\ao Your depot can\'t hold any more \ay'..item..'.')
                         break
                     end

@@ -1,3 +1,6 @@
+v4.1.4 2026-01-29
+- Fix: Fixed a depot deposit issue
+
 v4.1.3 2026-01-29
 - Fix: Fixes related to the new bank window causing crashes
 
