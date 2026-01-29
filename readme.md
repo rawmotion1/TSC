@@ -1,3 +1,6 @@
+v4.1.3 2026-01-29
+- Fix: Fixes related to the new bank window causing crashes
+
 v4.1.2 2025-11-22
 - Feat: The Search & Deliver feature now shows items on ignore lists.
 

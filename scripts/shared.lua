@@ -70,7 +70,7 @@ function shared.banker()
     end
 
     while not mq.TLO.Window('TradeskillDepotWnd').Open() do
-        mq.cmd('/notify BigBankWnd BIGB_TradeskillDepot leftmouseup')
+        mq.cmd('/notify BigBankWnd BNK_TradeskillDepot leftmouseup')
         --Wait for items to load
         while not mq.TLO.TradeskillDepot.ItemsReceived() do mq.delay(1000) end
     end
@@ -679,7 +679,7 @@ function shared.putInBank(tbl, tbl2, itemType)
                 repeat
                     mq.cmdf('/shift /itemnotify #%d leftmouseup', id)
                     mq.delay(100)
-                    mq.cmd('/notify BigBankWnd BIGB_AutoButton leftmouseup')
+                    mq.cmd('/notify BigBankWnd BNK_AutoButton leftmouseup')
                     mq.delay(100)
                     mq.doevents()
                     if full == true then
@@ -741,7 +741,7 @@ function shared.putInBank(tbl, tbl2, itemType)
 
                 if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
                     print('\at[TsC]\ao That\'s not right... Putting \ay'..v..'\ao back in the bank.') -- Item with same name, but is not what I'm looking for
-                    mq.cmd('/notify BigBankWnd BIGB_AutoButton leftmouseup')
+                    mq.cmd('/notify BigBankWnd BNK_AutoButton leftmouseup')
                     skippedItems[item] = true -- Mark the item as skipped to avoid infinite loop
                 else
                     shared.autoinv()

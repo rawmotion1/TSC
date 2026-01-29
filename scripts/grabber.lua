@@ -88,7 +88,7 @@ local function grabFromBank()
 
             if mq.TLO.Cursor.NoDrop() or mq.TLO.Cursor.Lore() or mq.TLO.Cursor.Container() > 0 or not mq.TLO.Cursor.Stackable() then
                 print('\at[TsC]\ao That\'s not right... Putting \ay'..item..'\ao back in the bank.') -- Item with same name, but is not what I'm looking for
-                mq.cmd('/notify BigBankWnd BIGB_AutoButton leftmouseup')
+                mq.cmd('/notify BigBankWnd BNK_AutoButton leftmouseup')
                 skippedItems[item] = true -- Mark the item as skipped to avoid infinite loop
             else
                 shared.autoinv()
@@ -107,7 +107,7 @@ local function grabFromBank()
             repeat
                 mq.cmdf('/shift /itemnotify #%d leftmouseup', id)
                 mq.delay(100)
-                mq.cmd('/notify BigBankWnd BIGB_AutoButton leftmouseup')
+                mq.cmd('/notify BigBankWnd BNK_AutoButton leftmouseup')
                 mq.delay(100)
             until not mq.TLO.FindItem(item).ID()
         end
