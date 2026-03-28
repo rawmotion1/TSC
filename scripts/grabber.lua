@@ -46,6 +46,11 @@ local function grabFromBank()
             local row = mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List('=' .. item, 2)()
             if not row or skippedItems[item] then break end
 
+            local inDepot
+            if mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(row, 5)() == 'Personal Depot' then
+                inDepot = true
+            end
+
             local stackSize = tonumber(mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(row, 3)())
 
             if not stackSize or stackSize == 0 then break end
@@ -54,12 +59,23 @@ local function grabFromBank()
 
             if qtyToGrab and qtyToGrab <= stackSize then
                 local grabAmount = math.min(qtyToGrab, 1000)
-                repeat
-                    mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', row)
-                    mq.delay(100)
-                    mq.cmd('/notify FindItemWnd FIW_GrabButton leftmouseup')
-                    mq.delay(100)
-                until mq.TLO.Window('QuantityWnd').Open()
+
+                if inDepot then
+                    local depotRow = mq.TLO.Window('TradeskillDepotWnd').Child('TD_Item_List').List('=' .. item, 2)()
+                    repeat
+                        mq.cmdf('/notify TradeskillDepotWnd TD_Item_List listselect %s', depotRow)
+                        mq.delay(100)
+                        mq.cmd('/notify TradeskillDepotWnd TD_Withdraw_Button leftmouseup')
+                        mq.delay(200)
+                    until mq.TLO.Window('QuantityWnd').Open()
+                else
+                    repeat
+                        mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', row)
+                        mq.delay(100)
+                        mq.cmd('/notify FindItemWnd FIW_GrabButton leftmouseup')
+                        mq.delay(100)
+                    until mq.TLO.Window('QuantityWnd').Open()
+                end
                 repeat
                     mq.cmdf('/notify QuantityWnd QTYW_slider newvalue %s', grabAmount)
                     mq.delay(100)
@@ -68,16 +84,29 @@ local function grabFromBank()
                     mq.cmd('/notify QuantityWnd QTYW_Accept_Button leftmouseup')
                     mq.delay(100)
                 until mq.TLO.Cursor() == item
+                
                 totalGrabbed = totalGrabbed + grabAmount
                 qtyToGrab = qtyToGrab - grabAmount
             else
                 local grabAmount = math.min(stackSize, qtyToGrab or stackSize)
-                repeat
-                    mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', row)
-                    mq.delay(100)
-                    mq.cmd('/shift /notify FindItemWnd FIW_GrabButton leftmouseup')
-                    mq.delay(200)
-                until mq.TLO.Cursor() == item or not row
+
+                if inDepot then
+                    local depotRow = mq.TLO.Window('TradeskillDepotWnd').Child('TD_Item_List').List('=' .. item, 2)()
+                    repeat
+                        mq.cmdf('/notify TradeskillDepotWnd TD_Item_List listselect %s', depotRow)
+                        mq.delay(100)
+                        mq.cmd('/shift /notify TradeskillDepotWnd TD_Withdraw_Button leftmouseup')
+                        mq.delay(200)
+                    until mq.TLO.Cursor() == item or not depotRow
+                else
+                    repeat
+                        mq.cmdf('/notify FindItemWnd FIW_ItemList listselect %s', row)
+                        mq.delay(100)
+                        mq.cmd('/shift /notify FindItemWnd FIW_GrabButton leftmouseup')
+                        mq.delay(200)
+                    until mq.TLO.Cursor() == item or not row
+                end
+
                 totalGrabbed = totalGrabbed + grabAmount
                 if qtyToGrab then
                     qtyToGrab = qtyToGrab - grabAmount

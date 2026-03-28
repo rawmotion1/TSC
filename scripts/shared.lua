@@ -74,6 +74,8 @@ function shared.banker()
         --Wait for items to load
         while not mq.TLO.TradeskillDepot.ItemsReceived() do mq.delay(1000) end
     end
+    mq.delay(300)
+    
 end
 
 --Load items in the find window
@@ -84,11 +86,14 @@ function shared.initFindWindow(itemType, scope)
     mq.cmd('/notify FindItemWnd FIW_Default leftmouseup')
     mq.delay(100)
     --Open depot window to refresh items
-    mq.cmd('/invoke ${Window[TradeSkillDepotWnd].DoOpen}')
+    if not mq.TLO.Window('TradeskillDepotWnd').Open() then
+        mq.cmd('/notify BigBankWnd BNK_TradeskillDepot leftmouseup')
+        print('open')
+    end
     --Wait for items to load
     while not mq.TLO.TradeskillDepot.ItemsReceived() do mq.delay(1000) end
     --Close depot window again
-    mq.cmd('/invoke ${Window[TradeSkillDepotWnd].DoClose}')
+    --mq.cmd('/invoke ${Window[TradeSkillDepotWnd].DoClose}')
     --Check the depot checkbox
     if not mq.TLO.Window('FindItemWnd').Child('FIW_SearchDepotButton').Checked() then
         mq.cmd('/notify FindItemWnd FIW_SearchDepotButton leftmouseup')

@@ -1,3 +1,6 @@
+v4.1.4 2026-03-28
+- Fix: Now grabs items directly from the depot using the withdraw button
+
 v4.1.4 2026-01-29
 - Fix: Fixed a depot deposit issue
 
