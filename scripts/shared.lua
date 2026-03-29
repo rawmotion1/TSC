@@ -87,8 +87,7 @@ function shared.initFindWindow(itemType, scope)
     mq.delay(100)
     --Open depot window to refresh items
     if not mq.TLO.Window('TradeskillDepotWnd').Open() then
-        mq.cmd('/notify BigBankWnd BNK_TradeskillDepot leftmouseup')
-        print('open')
+        mq.cmd('/invoke ${Window[TradeSkillDepotWnd].DoOpen}')
     end
     --Wait for items to load
     while not mq.TLO.TradeskillDepot.ItemsReceived() do mq.delay(1000) end

@@ -47,7 +47,7 @@ local function grabFromBank()
             if not row or skippedItems[item] then break end
 
             local inDepot
-            if mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(row, 5)() == 'Personal Depot' then
+            if string.find(mq.TLO.Window('FindItemWnd').Child('FIW_ItemList').List(row, 5)(), 'Personal') then
                 inDepot = true
             end
 
